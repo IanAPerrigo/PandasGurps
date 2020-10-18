@@ -1,22 +1,55 @@
+from data_models.actions.maneuvers import Maneuver
 
 
 class ActionManager:
     """
-    TODO: should keep track of what types of actions are still available.
-        NOTE: a fair amount of rules could determine which actions are applicable. KISS
+    Module to contain maneuvers on the current game state (at all stages of resolution).
+    TODO: When a turn ends, this manager is purged and the actions are saved in the history.
+    TODO: simplification of earlier note. This module should manage maneuvers submitted by actors.
+        The only concern with this module is to use an external rule manager to determine if two maneuvers
+        can be used in series.
     """
     def __init__(self):
         # Collects actions from an actor
         self.actor_actions = {}
+        self.current_order = 0
 
-    def register_actor(self, actor):
-        self.actor_actions[actor.id] = []
+    def register_actor(self, actor_id):
+        self.actor_actions[actor_id] = []
 
-    def submit_action(self, actor_action):
-        self.actor_actions[actor_action.actor].append(actor_action)
+    def submit_maneuver(self, actor_id, actor_maneuver: Maneuver):
+        """
+        Add or update a maneuver for a given actor.
+        :param actor_id:
+        :param actor_maneuver: 
+        :return: 
+        """
+        # Ignore empty maneuvers
+        if actor_maneuver is None:
+            return
 
-    def clear_actions(self):
+        # TODO: verify that the actor submitting the action is the actor contained in the action.
+
+        # Determine if maneuver can be merged with an existing maneuver or added as a separate maneuver.
+        matching_types = list(filter(lambda m: type(m) == type(actor_maneuver), self.actor_actions[actor_id]))
+        if len(matching_types) == 1:
+            # TODO: problem here if a maneuver is of a certain type is issued twice after the first has completed.
+            matching_types[0].merge(actor_maneuver)
+        else:
+            self.actor_actions[actor_id].append(actor_maneuver)
+
+    def clear(self):
         self.actor_actions = {}
+        self.current_order = 0
+
+    def remove_all_actions(self):
+        for actor, actions in self.actor_actions.items():
+            actions.clear()
 
     def get_submitted_actions(self):
-        return sorted(self.actor_actions.items(), key=lambda kv: kv[1].order)
+        actions_with_actor = []
+        # TODO: NOTE: not sure why a tuple is returned here, could easily jsut return action (action has actor in it)
+        for actor, maneuvers in self.actor_actions.items():
+            for maneuver in maneuvers:
+                actions_with_actor.append(maneuver)
+        return actions_with_actor

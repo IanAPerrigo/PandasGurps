@@ -11,11 +11,6 @@ class GridConfig(containers.DeclarativeContainer):
     config = providers.Configuration('config')
 
 
-# context = GridConfig.config.override({
-#
-# })
-
-
 class GridModel(containers.DeclarativeContainer):
     logger = providers.Singleton(logging.Logger, name="grid")
 

@@ -3,18 +3,20 @@ import uuid
 
 from data_models.actors import ActorModel
 from data_models.grid import GridModel
+from data_models.state.simulation_state import ObjectiveSimulationState, SubjectiveSimulationState
 from containers import grid
-from managers.state.simulation_state import ObjectiveSimulationState, SubjectiveSimulationState
 from managers.entity_manager import EntityModelManager
+from managers.action_manager import ActionManager
 
 
 class SimulationStateManager:
 
     # TODO: inject required managers to generate new grids, or modify other game state
     # Injected data should be only models, no game components
-    def __init__(self, grid_model: GridModel, entity_model_manager: EntityModelManager):
+    def __init__(self, grid_model: GridModel, entity_model_manager: EntityModelManager, action_manager: ActionManager):
         self.entity_model_manager = entity_model_manager
         self.grid_model = grid_model
+        self.action_manager = action_manager
         self.entity_states = {}
 
     def generate_subjective_state_for(self, entity_id):

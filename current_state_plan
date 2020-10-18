@@ -1,0 +1,53 @@
+
+7/30/2020
+Things complete:
+-Basic visuals
+-Turn mechanics
+-Actors and behaviors
+-Movement actions
+-Action Resolver basics
+
+Candidates of things to work on:
+
+-Terrain
+    Interesting features and environment provide movement obstacles
+    Introduces skill challenges for traversing terrain
+
+-Basic Combat
+    Simple Melee attack:
+        Weapon-less combat
+        combat rolls, damage, etc
+        Life cycle mechanics for actors (dying, unconsciousness, etc)
+
+-
+
+
+
+
+
+
+9/7/2020
+Watched a showcase of numba (used for optimizing python and numpy operations) might be useful for pathfinding, etc.
+
+
+10/11/2020
+Genetics idea:
+Each primary and secondary stat will be crossover sites. Pick a combination of both parent, then use normal distribution
+to introduce noise (rho being the mutation factor).
+
+Advantages, disadvantages, and innate skills will be passed on by selection:
+- one idea, generate a number [0, 1] for each category and that is the percentage one of the parents gives to the child.
+The rest of the percentage is how much the other parent gives. (This will mean duplicates will be more likely to be selected)
+Introduce a small configurable mutation rate for each adv/dis/innate that will cause a random adv/dis/innate to be selected instead.
+
+Learned skills (languages, non-innate skills, etc) must be TAUGHT.
+Teaching will be an action that can be done between two actors with the same language (penalty otherwise).
+Teaching is described in the gurps handbook (time to learn will need to be modified)
+
+In order to allow children to learn easier, an innate language between parent and child will give bonuses to teaching.
+
+
+10/15/2020
+Maneuvers = action objects
+have internal structures depending on the maneuver type. Most likely a list of actions.
+The maneuver resolve logic will be what validates the counts/order of each action.

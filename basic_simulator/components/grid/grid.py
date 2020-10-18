@@ -9,6 +9,7 @@ from panda3d.core import LVector3, LPoint3, PandaNode, RigidBodyCombiner, NodePa
 from data_models.grid import GridModel
 from utility.coordinates import *
 
+
 class GridComponent(DirectObject, PandaNode):
     def __init__(self, parent, data_model: GridModel, entity_component_manager):
 
@@ -133,11 +134,11 @@ class GridComponent(DirectObject, PandaNode):
                 # base_hex.instanceTo(placeholder)
                 placeholder.reparentTo(rbcnp)
 
-                text_node = TextNode('loc label')
-                text_node.setText("(%d, %d)" % (x, y))
-                text_path = location.attachNewNode(text_node)
-                text_path.setScale(0.5)
-                text_path.setPos(-1.5, -1.5, 0.5)
+                # text_node = TextNode('loc label')
+                # text_node.setText("(%d, %d)" % (x, y))
+                # text_path = location.attachNewNode(text_node)
+                # text_path.setScale(0.5)
+                # text_path.setPos(-1.5, -2, 0.5)
 
                 # Add any objects at this location:
 

@@ -1,7 +1,8 @@
 from dependency_injector import containers, providers
 import logging
 
-from managers import simulation_manager, state
+from managers import simulation_manager
+from data_models import state
 
 
 class SubjectiveSimulationStateContainer(containers.DeclarativeContainer):

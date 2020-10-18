@@ -22,7 +22,8 @@ load-display pandagl
 # while -1 lets the window manager choose the position.
 
 win-origin -2 -2
-win-size 800 600
+win-size 2560 1440
+undecorated #t
 
 # Uncomment this line if you want to run Panda fullscreen instead of
 # in a window.
@@ -52,8 +53,8 @@ multisamples 0
 # one (or define a new one for the particular category you wish to
 # change) to control this output.
 
-notify-level warning
-default-directnotify-level warning
+notify-level info
+default-directnotify-level info
 
 # These specify where model files may be loaded from.  You probably
 # want to set this to a sensible path for yourself.  $THIS_PRC_DIR is

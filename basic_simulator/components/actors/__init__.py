@@ -1,30 +1,38 @@
-from panda3d.core import LVector3, LPoint3, PandaNode
+from panda3d.core import LVector3, LPoint3, PandaNode, TextNode
 from direct.fsm import FSM
 from direct.directnotify.DirectNotify import DirectNotify
+from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 
 import random
 import numpy as np
 
-from data_models import actions
+from data_models.actions import Action, ActionStatus
 from managers.simulation_manager import SimulationStateManager
-from behaviors.actors import RandomActorBehavior, HumanPlayerBehavior
+from managers.action_resolvers import GenericActionResolver
+from behaviors import Behavior
+from events.actors import RefreshStats
 
 
 class ActorFSM(FSM.FSM):
-
-    def __init__(self, data_model, simulation_manager: SimulationStateManager):
+    def __init__(self,
+                 # Describes the actor and its behavior.
+                 data_model, behavior: Behavior,
+                 # Managers needed for the FSM to function.
+                 simulation_manager: SimulationStateManager,
+                 action_resolver: GenericActionResolver):
         FSM.FSM.__init__(self, 'fsm_%r' % data_model.entity_id)
 
         self.logger = DirectNotify().newCategory(type(self).__name__)
         self.data_model = data_model
 
         # TODO: Should be derived / configured based on a factory, and allow overriding to support any behavior.
-        self.behavior = RandomActorBehavior()
+        self.behavior = behavior
 
         self.yield_turn = None
         self.step_complete = None
         self.simulation_manager = simulation_manager
+        self.action_resolver = action_resolver
         self.poll_task = None
         self.keys = None # TODO: Replace with key manager later
 
@@ -82,22 +90,15 @@ class ActorFSM(FSM.FSM):
         if request == 'Complete' or not has_actions_left:
             return 'WaitForTurn'
 
-        # TODO: replace the resolving of actions here to a call to the action
-        #  manager to store them for later resolving.
-
-        # TODO: Replace with action resolvers
-        if isinstance(args[0], actions.MovementAction):
-            # TODO: interact with environment based on action returned.
-            vec = args[0].get_vector()
-            self.simulation_manager.grid_model.move(self.data_model.entity_id, np.array(vec))
-
-        # TODO: generate new state for the next step
-        self.simulation_manager.generate_subjective_state_for(self.data_model.entity_id)
+        # Submit the actions to the manager
+        actions_arg = args[0]
+        self.simulation_manager.action_manager.submit_maneuver(self.data_model.entity_id, actions_arg)
 
         self.step_complete()
 
     def exitTakingTurn(self):
         # Unbind the task that calculates the move.
+        # TODO: notify the behavior to become inactive (close out any processing its doing)
         taskMgr.remove(self.poll_task)
         self.poll_task = None
         self.yield_turn()
@@ -107,13 +108,20 @@ class ActorFSM(FSM.FSM):
 
         # TODO: remove this from here, it should be injected to any behavior that needs it without the FSMs concern
         self.behavior.keys = self.keys
-        action = self.behavior.act(current_state)
 
-        self.request('Action', action)
+        # TODO: allow None as an action that does not re-generate the state so that the behavior can have
+        #  its own threaded/async functions that complete eventually.
+        taken_actions = self.behavior.act(current_state)
+
+        if taken_actions is not None:
+            # Set the actions primary actor.
+            taken_actions.set_actor(self.data_model.entity_id)
+            self.request('Action', taken_actions)
+
         return Task.again
 
 
-class ActorComponent(PandaNode):
+class ActorComponent(PandaNode, DirectObject):
     def __init__(self, parent, data_model):
         PandaNode.__init__(self, "%s" % data_model.entity_id)
 
@@ -121,7 +129,17 @@ class ActorComponent(PandaNode):
         self.parent = parent
         self.path = parent.attachNewNode(self)
         self.data_model = data_model
+
+        self.health_bar = None
+
+        # Attach event handlers
+        RefreshStats.register(self.id, self, self.refresh_stats)
+
         self._instantiate_self_()
+
+    def refresh_stats(self):
+        stats = self.data_model.character_model.stats
+        self.health_bar.node().setText("%d/%d" % (stats['CURR_HP'], stats['HP']))
 
     def _instantiate_self_(self):
         actor = loader.loadModel(self.data_model.model_file)
@@ -131,4 +149,15 @@ class ActorComponent(PandaNode):
         actor.setPos(0, -0.8, 0)
         actor.setScale(1)
         actor.setHpr(180, 0, 0)
+        actor.setColor(.5, .5, .5, 0.5)
         actor.setDepthOffset(1)
+
+        text_node = TextNode('health_bar')
+        stats = self.data_model.character_model.stats
+        text_node.setText("%d/%d" % (stats['CURR_HP'], stats['HP']))
+        text_path = actor.attachNewNode(text_node)
+        text_path.setScale(0.5)
+        text_path.setHpr(180, 0, 0)
+        text_path.setColor(1, 1, 1, 1)
+        text_path.setPos(1.5, 1, 0.5)
+        self.health_bar = text_path

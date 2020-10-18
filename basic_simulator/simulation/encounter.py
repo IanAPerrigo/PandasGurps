@@ -1,4 +1,4 @@
-from managers.state.simulation_state import ObjectiveSimulationState
+from data_models.state.simulation_state import ObjectiveSimulationState
 
 
 class Encounter:
