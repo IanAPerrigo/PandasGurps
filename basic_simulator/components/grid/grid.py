@@ -90,12 +90,12 @@ class GridComponent(DirectObject, PandaNode):
         return Task.done
 
     def _instantiate_grid_(self):
-        base_hex = loader.loadModel("models/simple_hex.x")
+        base_hex = loader.loadModel("models/simple_hex.obj")
 
         # Set the initial position and scale.
         base_hex.setPos(0, 0, 0)
         base_hex.setScale(1)
-        base_hex.setHpr(180, 0, 0)
+        base_hex.setHpr(0, 0, 0)
         base_hex.setDepthOffset(1)
 
         grid = self.path.attachNewNode('model')
@@ -124,8 +124,9 @@ class GridComponent(DirectObject, PandaNode):
                 # placeholder = loader.loadModel("models/simple_hex.x")
                 placeholder = base_hex.copy_to(grid)
 
-                placeholder.setPos(pos.getX() - 1, pos.getZ() - 1, pos.getY() + 0.5)
-                placeholder.setHpr(180, 0, 0)
+                #placeholder.setPos(pos.getX() - 1, pos.getZ() - 1, pos.getY() + 0.5)
+                placeholder.setPos(pos.getX(), pos.getZ() - 1, pos.getY())
+                placeholder.setHpr(0, 0, 0)
                 major_color = random.choice([0, 1, 2])
                 rand_color = [0, 0, 0]
                 rand_color[major_color] = 1

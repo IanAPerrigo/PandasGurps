@@ -62,6 +62,9 @@ class HumanPlayerBehavior(Behavior):
         elif self.mode == "movement":
             moves = [MovementAction(vector)] if vector is not None else []
             action = MoveManeuver(moves)
+        else:
+            # TODO: add NO-OP
+            action = MoveManeuver([MovementAction(MovementType.NONE)])
 
         if self.ready:
             action.status = ActionStatus.PARTIAL_READY

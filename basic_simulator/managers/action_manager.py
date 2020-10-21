@@ -1,5 +1,5 @@
 from data_models.actions.maneuvers import Maneuver
-
+from data_models.actions import ActionStatus
 
 class ActionManager:
     """
@@ -53,3 +53,17 @@ class ActionManager:
             for maneuver in maneuvers:
                 actions_with_actor.append(maneuver)
         return actions_with_actor
+
+    def truncate_failure(self, action: Maneuver):
+        # TODO: this may not be used in the future depending on how failed actions are treated.
+        failure_index = self.actor_actions[action.actor].index(action)
+        self.actor_actions[action.actor] = self.actor_actions[action.actor][:failure_index + 1]
+
+        # Trim the point of failure
+        sub_failure = next(sub_action for sub_action in action.actions if sub_action.status == ActionStatus.FAILED)
+        sub_failure_index = action.actions.index(sub_failure)
+        action.actions = action.actions[:sub_failure_index]
+
+        # Default it to unready, since there is no way to know if its a partial or not.
+        # The caller will end up setting it to the right status when they issue the new actions.
+        action.status = ActionStatus.UNREADY

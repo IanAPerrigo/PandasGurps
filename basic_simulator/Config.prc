@@ -62,8 +62,8 @@ default-directnotify-level info
 # particular Config.prc file.
 
 model-path    $MAIN_DIR
-model-path    $THIS_PRC_DIR/..
-model-path    $THIS_PRC_DIR/../models
+#model-path    $THIS_PRC_DIR/..
+#model-path    $THIS_PRC_DIR/models
 
 # This enable the automatic creation of a TK window when running
 # Direct.
@@ -90,8 +90,9 @@ hardware-animated-vertices #f
 
 # Enable the model-cache, but only for models, not textures.
 
-model-cache-dir $USER_APPDATA/Panda3D-1.10
-model-cache-textures #f
+model-cache-dir $USER_APPDATA/Panda3D-1.10/cache
+#model-cache-dir $USER_APPDATA/Panda3D-1.10
+#model-cache-textures #f
 
 # This option specifies the default profiles for Cg shaders.
 # Setting it to #t makes them arbvp1 and arbfp1, since these
@@ -99,3 +100,6 @@ model-cache-textures #f
 # the latest profile available.
 
 basic-shaders-only #f
+
+# Allow loading of .obj files as models.
+load-file-type p3assimp

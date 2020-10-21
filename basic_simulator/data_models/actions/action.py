@@ -51,4 +51,5 @@ class CompoundAction(Action):
         self.actions += a1.actions
 
         # Derive the status of the newly added actions.
-        self.status = a1.status
+        if self.status != ActionStatus.FAILED:
+            self.status = a1.status

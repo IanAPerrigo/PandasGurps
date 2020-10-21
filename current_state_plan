@@ -9,10 +9,12 @@ Things complete:
 
 Candidates of things to work on:
 
+### NEW FEATURE ###
 -Terrain
     Interesting features and environment provide movement obstacles
     Introduces skill challenges for traversing terrain
 
+### PARTIALLY DONE FEATURE ###
 -Basic Combat
     Simple Melee attack:
         Weapon-less combat
@@ -31,6 +33,7 @@ Watched a showcase of numba (used for optimizing python and numpy operations) mi
 
 
 10/11/2020
+### NEW FEATURE ###
 Genetics idea:
 Each primary and secondary stat will be crossover sites. Pick a combination of both parent, then use normal distribution
 to introduce noise (rho being the mutation factor).
@@ -48,6 +51,44 @@ In order to allow children to learn easier, an innate language between parent an
 
 
 10/15/2020
+### DONE ###
+- NOTE: done for movement only. Will change its shape if new actions require it to.
 Maneuvers = action objects
 have internal structures depending on the maneuver type. Most likely a list of actions.
 The maneuver resolve logic will be what validates the counts/order of each action.
+
+
+10/19/2020
+### BACKLOG IDEA ###
+Visualization of un-executed moves and failed moves (like an obstacle is in the way)
+
+### NEW FEATURE ###
+Life cycle mechanics
+Reasons:
+- After combat, interaction with the environment, actors can take damage.
+- Taking damage has many possible side effects (mostly debuffs and incapacitation/death).
+- Currently debuffs have not been implemented (nothing to manage modifiers / debuffs) but to facilitate this
+resolving actions should have access to managers that calculate when certain modifiers should be applied, etc.
+
+Example: An actor takes a large amount of damage in combat. This will cause the 'Shock' debuff,  but the action
+shouldnt have to implement this directly, since other things can cause shock (movement involving damage).
+
+Debuffs would result after an action is resolved: either triggered by an interaction the action has with the game state,
+or directly by the action (status effect).
+
+Triggers:
+- abstraction layer watching for changes (in this case for unconciousness and death)
+Flow:
+1. action deals damage to actor.
+2. in the reduction of health, an observer reports that a change is made in HP, and a search is done for conditions
+that would trigger an event. If any conditions are met, the observer may register events to happen; either asynchronously
+or directly to a manager that is checked after each time step (or each action resolution).
+
+An action might need to synchronously (or async) get the modifiers as a result of an action, meaning the interaction of
+applying these debuffs cant be a simple Event (wouldn't be handled synchronously).
+
+
+Requirements:
+-
+
+

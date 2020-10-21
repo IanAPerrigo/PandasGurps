@@ -6,6 +6,7 @@ from managers import action_resolvers
 from managers.action_resolvers import movement as movement_resolvers
 from managers.action_resolvers import combat as combat_resolvers
 from managers.action_resolvers.maneuvers import move as movement_maneuver_resolvers
+from managers.action_resolvers.maneuvers import move_attack as move_attack_maneuver_resolvers
 
 from containers.managers.simulation_manager import SimulationManagerContainer
 from containers.managers.action_resolver_locator import ActionResolverLocatorContainer
@@ -35,6 +36,14 @@ class MeleeAttackResolverContainer(containers.DeclarativeContainer):
 
 
 class MoveManeuverResolverContainer(containers.DeclarativeContainer):
+    config = providers.Configuration('config')
+    logger = DirectNotify().newCategory("move_attack_maneuver_resolver")
+
+    resolver = providers.Singleton(move_attack_maneuver_resolvers.MoveAttackManeuverResolver, logger=logger,
+                                   generic_resolver=GenericResolverContainer.resolver)
+
+
+class MoveAttackManeuverResolverContainer(containers.DeclarativeContainer):
     config = providers.Configuration('config')
     logger = DirectNotify().newCategory("movement_maneuver_resolver")
 

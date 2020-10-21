@@ -1,7 +1,7 @@
 import numpy as np
 
 from data_models.actors.character import Character
-from data_models.stats.stat_set import StatType, StatSet, SecondaryStats, PrimaryStats, TertiaryStats, get_derived
+from data_models.actors.stats.stat_set import StatType, StatSet, SecondaryStats, PrimaryStats, get_derived
 
 
 class CharacterCreator:
@@ -86,6 +86,7 @@ class CharacterCreator:
 
         stat_set[StatType.CURR_HP.value] = stat_set[StatType.HP.value]
         stat_set[StatType.CURR_FP.value] = stat_set[StatType.FP.value]
+        stat_set[StatType.CURR_BM.value] = stat_set[StatType.BM.value]
 
         character = Character(stat_set)
         character.character_points = self.calculate_total(character)

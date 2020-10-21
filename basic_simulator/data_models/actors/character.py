@@ -1,6 +1,6 @@
 import math
 
-from data_models.stats import *
+from data_models.actors.stats import *
 
 
 class Character:

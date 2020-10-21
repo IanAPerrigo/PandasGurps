@@ -1,9 +1,8 @@
-import random
-
 from . import SimulationStateManager, ActionResolver, np
 
 from utility.rolling import *
-from events.actors import RefreshStats
+from events.component.actors import RefreshStats
+from events import Event
 
 
 class MeleeAttackResolver(ActionResolver):
@@ -119,6 +118,8 @@ class MeleeAttackResolver(ActionResolver):
                     "Attacker dealing damage (%s): %d" % (attacker_damage_descriptor.get_description(), attack_damage))
 
                 defender_char_model.stats['CURR_HP'] -= attack_damage # TODO: brittle, replace with StatType ref
+
+                Event.signal("actor_damaged", selected_target, attack_damage)
 
                 # TODO: apply damage ( as an event?)
                 # TODO: emit an event (to update display and determine if anything died

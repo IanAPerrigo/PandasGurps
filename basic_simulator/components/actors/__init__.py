@@ -1,17 +1,13 @@
-from panda3d.core import LVector3, LPoint3, PandaNode, TextNode
+from panda3d.core import PandaNode, TextNode
 from direct.fsm import FSM
 from direct.directnotify.DirectNotify import DirectNotify
 from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 
-import random
-import numpy as np
-
-from data_models.actions import Action, ActionStatus
 from managers.simulation_manager import SimulationStateManager
 from managers.action_resolvers import GenericActionResolver
 from behaviors import Behavior
-from events.actors import RefreshStats
+from events.component.actors import RefreshStats
 
 
 class ActorFSM(FSM.FSM):
@@ -146,9 +142,9 @@ class ActorComponent(PandaNode, DirectObject):
         actor.reparentTo(self.path)
 
         # Set the initial position and scale.
-        actor.setPos(0, -0.8, 0)
+        actor.setPos(0, 0, 0)
         actor.setScale(1)
-        actor.setHpr(180, 0, 0)
+        actor.setHpr(0, 0, 0)
         actor.setColor(.5, .5, .5, 0.5)
         actor.setDepthOffset(1)
 
@@ -157,7 +153,7 @@ class ActorComponent(PandaNode, DirectObject):
         text_node.setText("%d/%d" % (stats['CURR_HP'], stats['HP']))
         text_path = actor.attachNewNode(text_node)
         text_path.setScale(0.5)
-        text_path.setHpr(180, 0, 0)
+        text_path.setHpr(0, 0, 0)
         text_path.setColor(1, 1, 1, 1)
-        text_path.setPos(1.5, 1, 0.5)
+        text_path.setPos(-0.5, -.1, 0)
         self.health_bar = text_path

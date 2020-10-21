@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
 import logging
 
-from data_models import stats
+from data_models.actors import stats
 
 
 class StatContainer(containers.DeclarativeContainer):
