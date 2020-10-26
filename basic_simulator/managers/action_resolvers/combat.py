@@ -1,11 +1,12 @@
-from . import SimulationStateManager, ActionResolver, np
+from . import SimulationStateManager, ConsciousnessRequiredActionResolver, np
 
 from utility.rolling import *
+from data_models.actions.action import ActionStatus
 from events.component.actors import RefreshStats
 from events import Event
 
 
-class MeleeAttackResolver(ActionResolver):
+class MeleeAttackResolver(ConsciousnessRequiredActionResolver):
 
     # TODO: All state related managers (Grid, Actor, Environment, etc)
 
@@ -15,6 +16,11 @@ class MeleeAttackResolver(ActionResolver):
         self.logger = logger
 
     def resolve(self, action):
+        super(MeleeAttackResolver, self).resolve(action)
+
+        if action.status == ActionStatus.FAILED:
+            return
+
         # TODO: different specifications for the action will have different outcomes.
         #  e.g.
         #  - target with no location requires sight of the target
@@ -34,6 +40,7 @@ class MeleeAttackResolver(ActionResolver):
             # TODO: resolving error. Cant specify just a target (maybe?)
             #  Log?
             self.logger.warn("No target found.")
+            action.status = ActionStatus.FAILED
             return
 
         """
@@ -91,14 +98,11 @@ class MeleeAttackResolver(ActionResolver):
             self.logger.info("Attacker rolling to hit (3d6): [%s] | %d" % (hit_result.value, hit_roll.last_result))
 
             if hit_result == ContestResults.Failure:
-                # TODO: Attack misses. event?
-                return
+                """ TODO: Attack misses. event? """
             elif hit_result == ContestResults.Critical_Failure:
-                # TODO: critical miss table
-                return
+                """ TODO: critical miss table """
             elif hit_result == ContestResults.Critical_Success:
-                # TODO: perform critical hit
-                return
+                """ TODO: perform critical hit """
             else:
                 defense_roll = ContestRoll(defender_defense_score)
                 defense_result = defense_roll.contest()
@@ -106,9 +110,11 @@ class MeleeAttackResolver(ActionResolver):
                 self.logger.info("Defender rolling to defend (3d6): [%s] | %d" % (defense_result.value, defense_roll.last_result))
                 if defense_result == ContestResults.Critical_Success:
                     # TODO: cause attacker to critical miss
+                    action.status = ActionStatus.RESOLVED
                     return
                 elif defense_result == ContestResults.Success:
                     # Attack misses.
+                    action.status = ActionStatus.RESOLVED
                     return
 
                 # Attack connects, calculate damage.
@@ -117,7 +123,7 @@ class MeleeAttackResolver(ActionResolver):
                 self.logger.info(
                     "Attacker dealing damage (%s): %d" % (attacker_damage_descriptor.get_description(), attack_damage))
 
-                defender_char_model.stats['CURR_HP'] -= attack_damage # TODO: brittle, replace with StatType ref
+                defender_char_model.base_stats['CURR_HP'] -= attack_damage # TODO: brittle, replace with StatType ref
 
                 Event.signal("actor_damaged", selected_target, attack_damage)
 
@@ -128,8 +134,7 @@ class MeleeAttackResolver(ActionResolver):
                 # todo: replace with a more proper event that doesnt reference the stats update directly (more like a "deal damage" event)
                 RefreshStats.signal(defender_model.entity_id)
 
-            return
+            action.status = ActionStatus.RESOLVED
         else:
-            # TODO: log?
-            return
+            action.status = ActionStatus.FAILED
 

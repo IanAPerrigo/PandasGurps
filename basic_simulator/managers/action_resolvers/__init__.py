@@ -1,7 +1,8 @@
 from ..action_resolver_locator import ActionResolverLocator
 from ..simulation_manager import SimulationStateManager
 
-from data_models.actions import Action
+from data_models.actors.status_effects.consciousness import *
+from data_models.actions import Action, ActionStatus
 
 import numpy as np
 
@@ -16,7 +17,7 @@ class GenericActionResolver:
         self.action_resolver_locator = action_resolver_locator
         self.simulation_manager = simulation_manager
 
-    def resolve(self, action):
+    def resolve(self, action: Action):
         # Get the applicable resolver container for the action.
         resolver_container = self.action_resolver_locator.resolver(action)
 
@@ -36,6 +37,24 @@ class ActionResolver:
 
     def resolve(self, action):
         raise NotImplementedError()
+
+
+class ConsciousnessRequiredActionResolver(ActionResolver):
+    def __init__(self, simulation_manager: SimulationStateManager):
+        super(ConsciousnessRequiredActionResolver, self).__init__(simulation_manager)
+
+    def resolve(self, action):
+        """
+        Overwrites the base class behavior to verify that the actor in the action subject is conscious to
+        execute the action.
+        :param action:
+        :return:
+        """
+        actor_model = self.simulation_manager.entity_model_manager[action.actor].character_model
+
+        if DEAD in actor_model.status_effects or UNCONSCIOUS in actor_model.status_effects:
+            action.status = ActionStatus.FAILED
+            return
 
 
 """

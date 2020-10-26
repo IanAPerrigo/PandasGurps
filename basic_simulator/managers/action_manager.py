@@ -1,6 +1,7 @@
 from data_models.actions.maneuvers import Maneuver
 from data_models.actions import ActionStatus
 
+
 class ActionManager:
     """
     Module to contain maneuvers on the current game state (at all stages of resolution).
@@ -46,12 +47,14 @@ class ActionManager:
         for actor, actions in self.actor_actions.items():
             actions.clear()
 
-    def get_submitted_actions(self):
+    def get_submitted_actions(self, actor_id):
         actions_with_actor = []
         # TODO: NOTE: not sure why a tuple is returned here, could easily jsut return action (action has actor in it)
-        for actor, maneuvers in self.actor_actions.items():
-            for maneuver in maneuvers:
-                actions_with_actor.append(maneuver)
+        maneuvers = self.actor_actions[actor_id]
+
+        for maneuver in maneuvers:
+            actions_with_actor.append(maneuver)
+
         return actions_with_actor
 
     def truncate_failure(self, action: Maneuver):

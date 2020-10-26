@@ -2,6 +2,8 @@ from dependency_injector import containers, providers
 import logging
 import uuid
 
+from direct.directnotify.DirectNotify import DirectNotify
+
 from containers.stats import StatContainer
 from containers.managers.simulation_manager import SimulationManagerContainer
 from containers.managers.action_resolver import GenericResolverContainer
@@ -20,7 +22,7 @@ context = ActorConfig.config.override({
 
 class ActorModel(containers.DeclarativeContainer):
     config = providers.Configuration('config')
-    logger = providers.Singleton(logging.Logger, name="actor")
+    logger = DirectNotify().newCategory("actor_model")
 
     entity_id = providers.Factory(uuid.uuid4)
     character_model = providers.Factory(actors.Character, stats=config.stat_set)

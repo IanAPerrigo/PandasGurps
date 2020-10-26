@@ -1,4 +1,5 @@
 import enum
+from collections import MutableMapping
 
 
 class PrimaryStats(enum.Enum):
@@ -56,12 +57,40 @@ def get_derived(stat):
     return map(lambda x: x.value, derived if derived is not None else [])
 
 
-class StatSet(dict):
-    def __init__(self):
+class StatSet(MutableMapping):
+    def __init__(self, do_init=True):
         super(StatSet, self).__init__()
 
+        self._mapping = {}
+
         for stat_type in StatType:
-            self[stat_type.value] = 0
+            self._mapping[stat_type.value] = 0
+
+        # if do_init:
+        #     self.init()
+
+    def init(self):
+        for stat_type in StatType:
+            self._mapping[stat_type.value] = 0
+
+    def __getitem__(self, key):
+        return self._mapping[key]
+
+    def __delitem__(self, key):
+        self._mapping.pop(key)
+
+    def __setitem__(self, key, value):
+        self._mapping[key] = value
+
+    def __iter__(self):
+        return iter(self._mapping)
+
+    def __len__(self):
+        return len(self._mapping)
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self._mapping})"
+
 
 
 

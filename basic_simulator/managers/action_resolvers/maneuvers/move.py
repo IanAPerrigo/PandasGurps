@@ -1,9 +1,9 @@
 from data_models.actions.maneuvers.move import MoveManeuver
 from data_models.actions import ActionStatus
-from .. import SimulationStateManager, ActionResolver
+from .. import SimulationStateManager, ConsciousnessRequiredActionResolver
 
 
-class MoveManeuverResolver(ActionResolver):
+class MoveManeuverResolver(ConsciousnessRequiredActionResolver):
     """
     p. 364
     Move, but take no other action
@@ -16,7 +16,6 @@ class MoveManeuverResolver(ActionResolver):
     do is move.
     """
 
-    # TODO: wire GenericResolver
     def __init__(self, simulation_manager: SimulationStateManager, logger, generic_resolver):
         super(MoveManeuverResolver, self).__init__(simulation_manager)
 
@@ -24,7 +23,10 @@ class MoveManeuverResolver(ActionResolver):
         self.generic_resolver = generic_resolver # TODO: move to base class for ManeuverResolver or something like that
 
     def resolve(self, action: MoveManeuver):
-        # TODO: skip resolution if the maneuver has already been resolved.
+        super(MoveManeuverResolver, self).resolve(action)
+        if action.status == ActionStatus.FAILED:
+            return
+
         if action.status == ActionStatus.RESOLVED:
             raise Exception("Cannot re-resolve a completed maneuver.")
 

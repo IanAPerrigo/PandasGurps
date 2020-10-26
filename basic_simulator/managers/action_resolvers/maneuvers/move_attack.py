@@ -1,22 +1,14 @@
 from data_models.actions.maneuvers.move_attack import MoveAttackManeuver
 from data_models.actions import ActionStatus
-from .. import SimulationStateManager, ActionResolver
+from .. import SimulationStateManager, ConsciousnessRequiredActionResolver
 
 
-class MoveAttackManeuverResolver(ActionResolver):
+class MoveAttackManeuverResolver(ConsciousnessRequiredActionResolver):
     """
     p. 364
-    Move, but take no other action
-    except those specified under Free
-    Actions (p. 363). You may move any
-    number of yards up to your full Move
-    score. Most other maneuvers allow at
-    least some movement on your turn;
-    take this maneuver if all you want to
-    do is move.
+    TODO: description
     """
 
-    # TODO: wire GenericResolver
     def __init__(self, simulation_manager: SimulationStateManager, logger, generic_resolver):
         super(MoveAttackManeuverResolver, self).__init__(simulation_manager)
 
@@ -24,7 +16,10 @@ class MoveAttackManeuverResolver(ActionResolver):
         self.generic_resolver = generic_resolver # TODO: move to base class for ManeuverResolver or something like that
 
     def resolve(self, action: MoveAttackManeuver):
-        # TODO: skip resolution if the maneuver has already been resolved.
+        super(MoveAttackManeuverResolver, self).resolve(action)
+        if action.status == ActionStatus.FAILED:
+            return
+
         if action.status == ActionStatus.RESOLVED:
             raise Exception("Cannot re-resolve a completed maneuver.")
 

@@ -62,6 +62,20 @@ The maneuver resolve logic will be what validates the counts/order of each actio
 ### BACKLOG IDEA ###
 Visualization of un-executed moves and failed moves (like an obstacle is in the way)
 
+
+
+### DONE ###
+Modifiers and Status Effects (buffs adn de-buffs)
+
+Reasons:
+Modifiers to stats are required to implement certain status effects (shock, major damage, cripple).
+
+Difficulties:
+Currently, movement and combat reference the stat set directly, meaning each of these operate on base stats and no modifiers.
+Ideally, the modified stat set should be accessed instead of the regular stat set and both stat sets should be consistent with each other.
+The un-modified stat set should still be accessible (since any changes to base stats would happen there.
+
+
 ### NEW FEATURE ###
 Life cycle mechanics
 Reasons:
@@ -70,6 +84,8 @@ Reasons:
 - Currently debuffs have not been implemented (nothing to manage modifiers / debuffs) but to facilitate this
 resolving actions should have access to managers that calculate when certain modifiers should be applied, etc.
 
+DEPENDS ON: Status Effects and modifiers (unconsciousness and death are de-buffs)
+
 Example: An actor takes a large amount of damage in combat. This will cause the 'Shock' debuff,  but the action
 shouldnt have to implement this directly, since other things can cause shock (movement involving damage).
 
@@ -77,18 +93,24 @@ Debuffs would result after an action is resolved: either triggered by an interac
 or directly by the action (status effect).
 
 Triggers:
-- abstraction layer watching for changes (in this case for unconciousness and death)
+- abstraction layer watching for changes (in this case for unconsciousness and death)
 Flow:
 1. action deals damage to actor.
-2. in the reduction of health, an observer reports that a change is made in HP, and a search is done for conditions
-that would trigger an event. If any conditions are met, the observer may register events to happen; either asynchronously
-or directly to a manager that is checked after each time step (or each action resolution).
+2. right after the health is deducted from the total, an event is emitted for health changing.
+3. Event handler(s) determine if any status effects are given to the actor.
+4. After setting the valid status effect, a corresponding event is called to handle its effects on turn order (if they have any)
 
-An action might need to synchronously (or async) get the modifiers as a result of an action, meaning the interaction of
-applying these debuffs cant be a simple Event (wouldn't be handled synchronously).
+Unconsciousness:
+Does not effect turn order, but effects what actions an actor can make on a turn (a forced action to try to regain consciousness)
+and Do Nothing.
 
 
-Requirements:
--
+Turn management flow:
+1. Construct turn for actor (advancing turn, generating state)
+2. Attach callbacks and resources to ActorFSM for the current actor (callbacks are for submitting actions to be resolved)
+3. Start the actorFSM by advancing its state (allowing it to start generating actions) and have main FSM wait in TurnLoop State
+4. As actions are generated, the step_complete callback is called, this callback pulls all submitted actions and resolves them.
+    4.a [addition]: during the resolution of actions (maneuvers in particular), an actor can die or go unconscious. This
+    requires action resolvers to check the consciousness of the actor of a particular action before resolution.
 
 

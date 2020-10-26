@@ -1,9 +1,9 @@
-from . import SimulationStateManager, ActionResolver, np
+from . import SimulationStateManager, ConsciousnessRequiredActionResolver, np
 from data_models.actions.action import ActionStatus
 from data_models.actors.stats.stat_set import StatType
 
 
-class MovementResolver(ActionResolver):
+class MovementResolver(ConsciousnessRequiredActionResolver):
 
     # TODO: All state related managers (Grid, Actor, Environment, etc)
 
@@ -13,6 +13,11 @@ class MovementResolver(ActionResolver):
         self.logger = logger
 
     def resolve(self, action):
+        super(MovementResolver, self).resolve(action)
+
+        if action.status == ActionStatus.FAILED:
+            return
+        
         actor = action.actor
 
         # Validate that number of hexes moved is less than the basic speed of the actor.
@@ -24,7 +29,7 @@ class MovementResolver(ActionResolver):
             action.status = ActionStatus.FAILED
             return
 
-        actor_model.stats[StatType.CURR_BM.value] -= hex_cost
+        actor_model.base_stats[StatType.CURR_BM.value] -= hex_cost
 
         # TODO: manage movement challenges (terrain difficulty, walls, etc)
         # TODO: in order for this to work, the move resolver must know how much speed it remaining for a given turn.

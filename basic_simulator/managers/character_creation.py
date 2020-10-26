@@ -2,7 +2,7 @@ import numpy as np
 
 from data_models.actors.character import Character
 from data_models.actors.stats.stat_set import StatType, StatSet, SecondaryStats, PrimaryStats, get_derived
-
+from data_models.actors.modifiers import ModifiedStatSet
 
 class CharacterCreator:
     def __init__(self):
@@ -51,7 +51,8 @@ class CharacterCreator:
                     StatType.PER: 10,
                     StatType.FP: 10,
                     StatType.HP: 10,
-                    StatType.SPD: 5,
+                    StatType.SPD: 100,
+                    # TODO: switch back to 5 SPD
                     StatType.BM: 5} if not defaults else defaults
         keys, values = zip(*defaults.items())
         stats = np.round(np.random.normal(np.zeros(shape=(len(defaults))), scale=rho)).astype(int)
@@ -88,6 +89,8 @@ class CharacterCreator:
         stat_set[StatType.CURR_FP.value] = stat_set[StatType.FP.value]
         stat_set[StatType.CURR_BM.value] = stat_set[StatType.BM.value]
 
-        character = Character(stat_set)
+        modified_stat_set = ModifiedStatSet(stat_set)
+
+        character = Character(base_stats=stat_set, modified_stats=modified_stat_set)
         character.character_points = self.calculate_total(character)
         return character

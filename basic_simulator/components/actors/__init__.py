@@ -78,26 +78,21 @@ class ActorFSM(FSM.FSM):
         self.poll_task = taskMgr.add(self.poll_behavior, "wait_for_action")
 
     def filterTakingTurn(self, request, args):
-        # TODO: determine if the actor has remaining actions.
-        # STUB:
-        has_actions_left = True
-
         # Handle completion for the turn.
-        if request == 'Complete' or not has_actions_left:
+        if request == 'Complete':
             return 'WaitForTurn'
+        elif request == 'Action':
+            # Submit the actions to the manager
+            actions_arg = args[0]
+            self.simulation_manager.action_manager.submit_maneuver(self.data_model.entity_id, actions_arg)
 
-        # Submit the actions to the manager
-        actions_arg = args[0]
-        self.simulation_manager.action_manager.submit_maneuver(self.data_model.entity_id, actions_arg)
-
-        self.step_complete()
+            self.step_complete()
 
     def exitTakingTurn(self):
         # Unbind the task that calculates the move.
         # TODO: notify the behavior to become inactive (close out any processing its doing)
         taskMgr.remove(self.poll_task)
         self.poll_task = None
-        self.yield_turn()
 
     def poll_behavior(self, task):
         current_state = self.simulation_manager.entity_states[self.data_model.entity_id]

@@ -1,20 +1,32 @@
 import math
 
 from data_models.actors.stats import *
+from data_models.actors.modifiers import ModifiedStatSet
+from data_models.actors.status_effects import *
 
 
 class Character:
     """
     Base class for any playable character.
     """
-    def __init__(self, stats: StatSet):
-        self.stats = stats
+    def __init__(self, base_stats: StatSet, modified_stats: ModifiedStatSet, status_effects=None):
+        self.base_stats = base_stats
+        self.stats = modified_stats
+        self.status_effects = status_effects if status_effects is not None else set()
         self.advantages = None
         self.disadvantages = None
         self.description = None
         self.inventory = None
         self.languages = None
         self.character_points = 0
+
+    def add_status_effect(self, a_status_effect: StatusEffect):
+        self.status_effects.add(a_status_effect)
+        map(self.stats.add_modifier, a_status_effect.modifiers)
+
+    def remove_status_effect(self, a_status_effect: StatusEffect):
+        self.status_effects.discard(a_status_effect)
+        map(self.stats.remove_modifier, a_status_effect.modifiers)
 
     @property
     def active_weapons(self):
