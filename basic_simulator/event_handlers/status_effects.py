@@ -9,15 +9,17 @@ from data_models.actors.status_effects.consciousness import *
 from direct.directnotify.DirectNotify import DirectNotify
 
 
-class FatalDamageHandler(DirectObject):
+class ConsciousnessHandler(DirectObject):
     def __init__(self, entity_model_manager: EntityModelManager, logger):
-        super(FatalDamageHandler, self).__init__()
+        super(ConsciousnessHandler, self).__init__()
 
         self.entity_model_manager = entity_model_manager
         self.logger = logger
 
         # Register event that watches for damage to occur.
         Event.register("actor_damaged", self, self.assess_damage)
+        Event.register("actor_retain_consciousness", self, self.maintain_consciousness)
+        Event.register("actor_regain_consciousness", self, self.regain_consciousness)
 
     def apply_death(self, actor):
         # Death is absolute, and negates any other form of consciousness.
@@ -109,3 +111,8 @@ class FatalDamageHandler(DirectObject):
             actor.add_status_effect(NON_EXISTENT)
             self.logger.info("%s is unrecognizable." % actor_id)
 
+    def maintain_consciousness(self, actor_id):
+        pass
+
+    def regain_consciousness(self, actor_id):
+        pass

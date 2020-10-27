@@ -6,6 +6,7 @@ from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 from panda3d.core import LVector3, LPoint3, PandaNode, RigidBodyCombiner, NodePath, TextNode
 
+from events import Event
 from data_models.grid import GridModel
 from utility.coordinates import *
 
@@ -23,49 +24,9 @@ class GridComponent(DirectObject, PandaNode):
         self._instantiate_grid_()
 
         # Register for messages about each location.
-        # self.accept("set_entity_location", self.set_entity_location)
-        # self.accept("move_entity", self.move_entity)
+        Event.register("notify_grid_update", self, self.update_grid)
 
-    # Deprecated. No events for interacting with components. Change their data and call an update as an event.
-    # """ Accepts:
-    #     location: tuple
-    #     entity_id: Id of the entity moving
-    # """
-    # def set_entity_location(self, location, actor):
-    #     print("Entity: %s received an update to move to Loc: %s"%(actor, location))
-    #
-    #     location = np.array(location)
-    #     loc = self.path.find("location.%s.%s" % (location[0], location[1]))
-    #     if not self.data_model.exists(location):
-    #         # TODO: handle errors
-    #         return
-    #
-    #     actor_data = actor.data_model
-    #     actor_loc = self.data_model.get_loc_of_obj(actor_data.id)
-    #     if actor_loc is not None:
-    #         self.data_model.remove(actor_data.id)
-    #
-    #     self.data_model.insert(location, actor_data.id)
-    #
-    #     actor.path.reparentTo(loc)
-    #     # TODO: balance contents
-    #
-    # def move_entity(self, vec, actor):
-    #     actor_data = actor.data_model
-    #     current_loc = self.data_model.get_loc_of_obj(actor_data.id)
-    #     new_loc = current_loc + np.array(vec)
-    #     if current_loc is not None and self.data_model.exists(new_loc):
-    #         self.data_model.remove(actor_data.id)
-    #         self.data_model.insert(new_loc, actor_data.id)
-    #
-    #         new_loc_component = self.path.find("location.%s.%s" % (new_loc[0], new_loc[1]))
-    #         actor.path.reparentTo(new_loc_component)
-    #         # TODO: balance contents
-    #     else:
-    #         #TODO: error
-    #         return
-
-    def update_grid(self, task):
+    def update_grid(self):
         """
         Update the grid when its contents change.
         :return:
@@ -86,8 +47,6 @@ class GridComponent(DirectObject, PandaNode):
 
         # Clear all pending changes.
         self.data_model.changes_delta.clear()
-
-        return Task.done
 
     def _instantiate_grid_(self):
         base_hex = loader.loadModel("models/simple_hex.obj")

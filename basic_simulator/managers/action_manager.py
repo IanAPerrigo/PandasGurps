@@ -13,9 +13,8 @@ class ActionManager:
     def __init__(self):
         # Collects actions from an actor
         self.actor_actions = {}
-        self.current_order = 0
 
-    def register_actor(self, actor_id):
+    def reset_actions_for(self, actor_id):
         self.actor_actions[actor_id] = []
 
     def submit_maneuver(self, actor_id, actor_maneuver: Maneuver):
@@ -29,6 +28,10 @@ class ActionManager:
         if actor_maneuver is None:
             return
 
+        if actor_id not in self.actor_actions:
+            # TODO: handle more gracefully, in case this ends up happening with AIs in edge cases.
+            raise Exception("Cannot submit an action for an actor that does not have control.")
+
         # TODO: verify that the actor submitting the action is the actor contained in the action.
 
         # Determine if maneuver can be merged with an existing maneuver or added as a separate maneuver.
@@ -39,9 +42,8 @@ class ActionManager:
         else:
             self.actor_actions[actor_id].append(actor_maneuver)
 
-    def clear(self):
+    def clear_all(self):
         self.actor_actions = {}
-        self.current_order = 0
 
     def remove_all_actions(self):
         for actor, actions in self.actor_actions.items():

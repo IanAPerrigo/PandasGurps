@@ -9,10 +9,10 @@ from event_handlers import status_effects
 import components.actors as actor_components
 
 
-class FatalDamageHandlerContainer(containers.DeclarativeContainer):
+class ConsciousnessHandlerContainer(containers.DeclarativeContainer):
     config = providers.Configuration('config')
-    logger = DirectNotify().newCategory("fatal_damage_handler")
+    logger = DirectNotify().newCategory("consciousness_handler")
 
-    fatal_damage_handler = providers.Singleton(
-        status_effects.FatalDamageHandler,
+    consciousness_handler = providers.Singleton(
+        status_effects.ConsciousnessHandler,
         entity_model_manager=EntityModelManagerContainer.entity_model_manager, logger=logger)
