@@ -1,8 +1,7 @@
 import copy
-from direct.showbase.DirectObject import DirectObject
 
 from managers.entity_manager import EntityModelManager
-from data_models.actors.status_effects.consciousness import *
+from data_models.entities.status_effects.consciousness import *
 
 
 class TurnManager:

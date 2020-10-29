@@ -1,6 +1,8 @@
-from . import SimulationStateManager, ConsciousnessRequiredActionResolver, np
+import numpy as np
+
+from . import SimulationStateManager, ConsciousnessRequiredActionResolver
 from data_models.actions.action import ActionStatus
-from data_models.actors.stats.stat_set import StatType
+from data_models.entities.stats import StatType
 
 
 class MovementResolver(ConsciousnessRequiredActionResolver):

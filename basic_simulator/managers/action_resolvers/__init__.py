@@ -1,10 +1,8 @@
 from ..action_resolver_locator import ActionResolverLocator
 from ..simulation_manager import SimulationStateManager
 
-from data_models.actors.status_effects.consciousness import *
+from data_models.entities.status_effects.consciousness import *
 from data_models.actions import Action, ActionStatus
-
-import numpy as np
 
 
 class GenericActionResolver:

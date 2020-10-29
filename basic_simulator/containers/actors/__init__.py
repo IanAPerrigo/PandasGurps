@@ -7,7 +7,7 @@ from direct.directnotify.DirectNotify import DirectNotify
 from containers.stats import StatContainer
 from containers.managers.simulation_manager import SimulationManagerContainer
 from containers.managers.action_resolver import GenericResolverContainer
-from data_models import actors
+from data_models.entities import actors
 import components.actors as actor_components
 
 
@@ -25,7 +25,7 @@ class ActorModel(containers.DeclarativeContainer):
     logger = DirectNotify().newCategory("actor_model")
 
     entity_id = providers.Factory(uuid.uuid4)
-    character_model = providers.Factory(actors.Character, stats=config.stat_set)
+    character_model = providers.Factory(actors.Being, stats=config.stat_set)
     actor_model = providers.Factory(actors.ActorModel, entity_id=entity_id, character_model=config.character_model, model_file=ActorConfig.config.model_file)
 
 

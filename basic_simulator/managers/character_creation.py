@@ -1,8 +1,9 @@
 import numpy as np
 
-from data_models.actors.character import Character
-from data_models.actors.stats.stat_set import StatType, StatSet, SecondaryStats, PrimaryStats, get_derived
-from data_models.actors.modifiers import ModifiedStatSet
+from data_models.entities.being import Being
+from data_models.entities.stats import StatType, StatSet, SecondaryStats, PrimaryStats, get_derived
+from data_models.entities.modifiers import ModifiedStatSet
+
 
 class CharacterCreator:
     def __init__(self):
@@ -13,7 +14,7 @@ class CharacterCreator:
         #   - costs for different stats, skills, adv/dis, etc.
         pass
 
-    def calculate_total(self, character: Character):
+    def calculate_total(self, character: Being):
         # TODO: assume standard costs for stats (only thing that costs points at the moment)
         # Total primary stat costs.
         primary_stats = {
@@ -33,7 +34,7 @@ class CharacterCreator:
 
         return point_total
 
-    def validate_character(self, character: Character):
+    def validate_character(self, character: Being):
         """
         Total up the points for the character and enforce other rules on different aspects of the character.
         :param character:
@@ -91,6 +92,6 @@ class CharacterCreator:
 
         modified_stat_set = ModifiedStatSet(stat_set)
 
-        character = Character(base_stats=stat_set, modified_stats=modified_stat_set)
+        character = Being(base_stats=stat_set, modified_stats=modified_stat_set)
         character.character_points = self.calculate_total(character)
         return character

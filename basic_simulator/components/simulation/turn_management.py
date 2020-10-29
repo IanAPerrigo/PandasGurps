@@ -8,7 +8,7 @@ from managers.interaction_event_manager import InteractionEventManager
 
 from data_models.actions import ActionStatus
 from data_models.actions.maneuvers import YieldTurnManeuver
-from data_models.actors.status_effects.consciousness import *
+from data_models.entities.status_effects.consciousness import *
 from events import Event
 
 

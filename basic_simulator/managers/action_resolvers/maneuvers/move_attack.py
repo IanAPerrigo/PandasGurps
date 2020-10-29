@@ -24,6 +24,7 @@ class MoveAttackManeuverResolver(ConsciousnessRequiredActionResolver):
             raise Exception("Cannot re-resolve a completed maneuver.")
 
         # Verify that there is only free actions and movement actions.
+        # Verify that there is only one combat per active weapon.
         # TODO
 
         # Resolve each action in the order provided (skipping already completed actions).

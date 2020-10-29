@@ -14,19 +14,12 @@ Candidates of things to work on:
     Interesting features and environment provide movement obstacles
     Introduces skill challenges for traversing terrain
 
-### PARTIALLY DONE FEATURE ###
+### DONE ###
 -Basic Combat
     Simple Melee attack:
         Weapon-less combat
         combat rolls, damage, etc
         Life cycle mechanics for actors (dying, unconsciousness, etc)
-
--
-
-
-
-
-
 
 9/7/2020
 Watched a showcase of numba (used for optimizing python and numpy operations) might be useful for pathfinding, etc.
@@ -76,8 +69,12 @@ Ideally, the modified stat set should be accessed instead of the regular stat se
 The un-modified stat set should still be accessible (since any changes to base stats would happen there.
 
 
-### NEW FEATURE ###
+### PARTIALLY DONE ###
 Life cycle mechanics
+
+##Needs to be completed##
+Recovery from unconsciousness and retain consciousness
+
 Reasons:
 - After combat, interaction with the environment, actors can take damage.
 - Taking damage has many possible side effects (mostly debuffs and incapacitation/death).
@@ -114,3 +111,118 @@ Turn management flow:
     requires action resolvers to check the consciousness of the actor of a particular action before resolution.
 
 
+
+### NEW FEATURE ###
+Add skills to combat:
+
+- Make combat depend on skills (innate attacks only to begin).
+
+Dependencies:
+- Requires skills to be done.
+
+### NEW FEATURE ###
+Add weapons to combat:
+
+- Make combat depend on skills and weapons
+
+Dependencies:
+- Requires skills to be done.
+- Requires inventory and weapons to be done.
+
+
+### NEW FEATURE ###
+Add stances and their bonuses (status effects) to combat:
+
+- Allow maneuvers to modify the posture of the actor (crouching, laying down)
+- Allow actors to take defensive maneuvers (all out)
+
+### NEW FEATURE ###
+Skills:
+
+- Add learned and innate skills that can be used in certain circumstances.
+-
+
+### NEW FEATURE ###
+Inventory and equipped items:
+
+- Have items storable in wearable containers on the actor (in the inventory tree).
+- Have natural storage locations for anything (hands)
+- Have natural storage locations for wearable equipment (body parts)
+
+Dependencies:
+- Should require the hit locations structures to be at least added by name (non-functional is okay)
+
+
+### NEW FEATURE ###
+Energy system:
+
+- Create a system to analyze the amount of FP used over time.
+    - Sustained use of movement, combat or other actions deemed costly.
+- Add "Harvest" and "Eat" actions.
+    - Harvest: if target is disabled (unconscious, dead, pinned).
+    Target can be an entity with the edible status effect.
+    Automatic hit, deal Swing (CUT) damage and gain 1 meal's worth of food.
+    When an entity receives the non-existent status, it can no longer be harvested.
+    The idea is to have lower HP entities count for less food (weaker and generally smaller)
+    Harvested food will be dropped on the floor. An general action to pick up will be added with inventory
+    - Eat: consume food nearby or in a container you own
+    Add status effect "Eaten N" where N is the number of meals eaten
+- Missing a meal:
+    A meal is missed if after 1/3 of the day, the actor doesnt have "Eaten 1"
+    After a meal period has elapsed, remove a level of Eaten from the active eaten status. If none exists, gain a
+    Starvation stack.
+- Starvation:
+    Starvation requires a whole day of rest + 3 whole meals.
+    (might be extreme, here is a test case)
+        Rest being interrupted can easily cause death, since anything can ust come along even if the actor ate and was resting.
+        Might consider not having "all or nothing" regeneration (as per the rules).
+        Consideration: If the actor can eat 3 meals in a day, each meal with the 'rest' buff, then the starvation is gone.
+- Dehydration:
+    - 2 quarts per day required
+        - 8 drinks of water a day
+    - Lose 1 FP every 8 hours
+        - if less than 1 quart was drank in a day, lose an extra 1 FP and 1 HP
+            - Represented by "dehydration N" N being the number of periods of missed water.
+            - "Severe dehydration N" is the number of days drinking less than a quart of water.
+        - all dehydration debuffs can be removed by ample rest and normal water intake.
+- Resting:
+    Resting buff is awarded when strenuous activity is avoided for a period of time.
+    - Strenuous movement: > 40% maximum movement.
+    - Any combat
+    - Lifting Extra-Heavy loads (overexertion)
+    - Dehydration or starvation nullifies the effects of rest.
+    - Rest periods and status-effects
+        - Every 10m of rest: +1 FP or +2 with food
+    - Sleep:
+        - 1 FP per hour uninterrupted
+        - Required in last 24 hours otherwise incur penalties (the only reason to do it, since rest is more efficient)
+
+Breakdown (large feature):
+
+- Add harvest and eat first, and the status effects given from eating.
+- Next, add non-actor entities that count as food (maybe a status effect "edible")
+    - Also add meal entities that will eventually be able to be picked up.
+- Next add a simple 'tick' event system where each turn the tick counter is incremented and an event is sent out.
+    A note about this, statuses not tied directly to tick, a status_update event will be called from the tick event
+    to keep order of operations in case some priority needs to arise. The status_update will handle registration of
+    status updates on particular tick numbers.
+- Next modify the "eaten" and 'drank' status to be applied on character creation (both at level 0)
+    Data associated with each status should be:
+        Period begin tick (so day intervals can be calculated to apply the starvation and dehydration updates)
+- Next, have the "EnergyHandler" event handler schedule events on status_update_manager for future status updates.
+    - A decision point here: should extra food eaten in a day be a reward?
+        Maybe at the expiration of the food period for the day, only 3 meals are subtracted, allowing anything else to
+        be a sort of "reserve". So an actor with extra food intake can survive without food longer (only works for food)
+
+
+### FEATURE IDEA ###
+Due to balancing concerns, the time frames between micro-gurps and macro-gurps could create a nightmare for simulation.
+Add an option to compress or expand time:
+
+Reasoning:
+Having every second being simulated when macro-gurps deals with hours and days could be excruciating to test out features.
+Time dilation controls could scale time to divide based on the day, e.g. instead of 86,400 iterations per day, a factor
+of 10x could make only 8640 turns per day (easier to simulate longer term behaviors).
+
+Other things might need to be done to ease computation, such as if an entity is not in the observation area of any other
+entity and the entity is resting / sleeping, dont consider it an actor.

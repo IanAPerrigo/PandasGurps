@@ -3,10 +3,8 @@ from direct.showbase.DirectObject import DirectObject
 from events import Event
 from managers.entity_manager import EntityModelManager
 from utility.rolling import *
-from data_models.actors.stats.stat_set import StatType
-from data_models.actors.status_effects.consciousness import *
-
-from direct.directnotify.DirectNotify import DirectNotify
+from data_models.entities.stats import StatType
+from data_models.entities.status_effects.consciousness import *
 
 
 class ConsciousnessHandler(DirectObject):
@@ -46,8 +44,6 @@ class ConsciousnessHandler(DirectObject):
 
         self.logger.info("Fell below 0 HP (HP = %d). Rolled HT to stay conscious: %s | [%d vs HT of %d]" %
                          (curr_hp, ht_result.value, ht_roll.last_result, ht))
-
-        # TODO: clear out old status like if unconscious -> death, remove unconscious.
 
         if ht_result == ContestResults.Failure:
             self.apply_unconscious(actor)

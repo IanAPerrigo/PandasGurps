@@ -1,4 +1,6 @@
-from . import SimulationStateManager, ConsciousnessRequiredActionResolver, np
+import numpy as np
+
+from . import SimulationStateManager, ConsciousnessRequiredActionResolver
 
 from utility.rolling import *
 from data_models.actions.action import ActionStatus

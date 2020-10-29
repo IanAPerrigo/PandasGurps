@@ -2,8 +2,8 @@ from operator import attrgetter
 from functools import reduce
 from collections import MutableMapping
 
-from data_models.actors.stats.stat_set import StatSet, StatType
-from data_models.actors.modifiers.modifier import Modifier
+from data_models.entities.stats import StatSet
+from data_models.entities.modifiers.modifier import Modifier
 
 
 class ModifiedStatSet(StatSet, MutableMapping):

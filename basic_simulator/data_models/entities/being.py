@@ -1,18 +1,19 @@
 import math
 
-from data_models.actors.stats import *
-from data_models.actors.modifiers import ModifiedStatSet
-from data_models.actors.status_effects import *
+from data_models.entities.entity import Entity
+from data_models.entities.stats import *
+from data_models.entities.modifiers import ModifiedStatSet
+from data_models.entities.status_effects import *
 
 
-class Character:
+class Being(Entity):
     """
-    Base class for any playable character.
+    Base class for any entity with stats.
     """
-    def __init__(self, base_stats: StatSet, modified_stats: ModifiedStatSet, status_effects=None):
+    def __init__(self, base_stats: StatSet, modified_stats: ModifiedStatSet, status_effects: set = None):
+        super(Being, self).__init__(status_effects=status_effects)
         self.base_stats = base_stats
         self.stats = modified_stats
-        self.status_effects = status_effects if status_effects is not None else set()
         self.advantages = None
         self.disadvantages = None
         self.description = None

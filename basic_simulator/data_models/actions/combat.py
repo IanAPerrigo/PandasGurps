@@ -6,21 +6,20 @@ from .action import Action
 
 
 class MeleeAttack(Action):
-    def __init__(self, target_id: uuid4 = None, location: np.array = None, direction: np.array = None, actor=None):
+    def __init__(self, target_id: uuid4 = None, location: np.array = None, direction: np.array = None):
         super(MeleeAttack, self).__init__()
-        self.actor = actor
         self.target_id = target_id
         self.location = location
         self.direction = direction
 
     @classmethod
-    def at_location(cls, location: np.array, actor=None):
-        return cls(actor=actor, location=location)
+    def at_location(cls, location: np.array):
+        return cls(location=location)
 
     @classmethod
-    def in_direction(cls, direction: np.array, actor=None):
-        return cls(actor=actor, direction=direction)
+    def in_direction(cls, direction: np.array):
+        return cls(direction=direction)
 
     @classmethod
-    def target(cls, target_id: uuid4, actor=None):
-        return cls(actor=actor, target_id=target_id)
+    def target(cls, target_id: uuid4):
+        return cls(target_id=target_id)
