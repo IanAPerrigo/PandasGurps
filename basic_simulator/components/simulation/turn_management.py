@@ -58,21 +58,21 @@ class TurnManagementFSM(FSM):
         curr_actor = self.turn_manager.get_current_actor()
 
         # Determine if this actor can take a turn.
-        character_model = self.simulation_manager.entity_model_manager[curr_actor].character_model
-        if DEAD in character_model.status_effects:
+        character_model = self.simulation_manager.being_model_manager.get(curr_actor)
+        if character_model.status_effects.is_affected_by(Dead):
             # Actor is dead. Skip their turn, and the actor will be cleaned up next turn cycle.
             self.demand("NextTurn")
             return
-        elif UNCONSCIOUS in character_model.status_effects:
+        elif character_model.status_effects.is_affected_by(Unconscious):
             # Actor is unconscious, have them attempt to regain consciousness, then end the turn regardless of success.
             Event.signal("actor_regain_consciousness", curr_actor)
             self.demand("NextTurn")
             return
-        elif HANGING_ONTO_CONSCIOUSNESS in character_model.status_effects:
+        elif character_model.status_effects.is_affected_by(HangingOnToConsciousness):
             # Actor is hanging onto consciousness, have them attempt to retain it. If they failed to retain,
             # skip their turn. Otherwise, allow them to continue their their turn.
             Event.signal("actor_retain_consciousness", curr_actor)
-            if UNCONSCIOUS in character_model.status_effects:
+            if character_model.status_effects.is_affected_by(Unconscious):
                 self.demand("NextTurn")
                 return
 

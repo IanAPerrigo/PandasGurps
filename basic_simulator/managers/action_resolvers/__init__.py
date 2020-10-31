@@ -48,9 +48,9 @@ class ConsciousnessRequiredActionResolver(ActionResolver):
         :param action:
         :return:
         """
-        actor_model = self.simulation_manager.entity_model_manager[action.actor].character_model
+        actor_model = self.simulation_manager.being_model_manager.get(action.actor)
 
-        if DEAD in actor_model.status_effects or UNCONSCIOUS in actor_model.status_effects:
+        if actor_model.status_effects.is_affected_by(Dead) or actor_model.status_effects.is_affected_by(Unconscious):
             action.status = ActionStatus.FAILED
             return
 

@@ -1,16 +1,15 @@
 from data_models.grid import GridModel
 from data_models.state.simulation_state import SubjectiveSimulationState
 from containers import grid
-from managers.entity_manager import EntityModelManager
+from managers.entity_manager import EntityModelManager, BeingModelManager
 from managers.action_manager import ActionManager
 
 
 class SimulationStateManager:
-
-    # TODO: inject required managers to generate new grids, or modify other game state
-    # Injected data should be only models, no game components
-    def __init__(self, grid_model: GridModel, entity_model_manager: EntityModelManager, action_manager: ActionManager):
+    def __init__(self, grid_model: GridModel, entity_model_manager: EntityModelManager,
+                 being_model_manager: BeingModelManager, action_manager: ActionManager):
         self.entity_model_manager = entity_model_manager
+        self.being_model_manager = being_model_manager
         self.grid_model = grid_model
         self.action_manager = action_manager
         self.entity_states = {}

@@ -11,8 +11,8 @@ from events.component.actors import RefreshStats
 from events import Event
 
 from containers.grid import GridNode, GridConfig
-from containers.managers import EntityComponentManagerContainer, EntityModelManagerContainer, EntityFsmManagerContainer
-from containers.actors import *
+from containers.managers import *
+from containers.components import *
 from containers.managers.simulation_manager import SimulationManagerContainer
 from containers.managers.turn_manager import TurnManagerContainer
 from containers.managers.action_manager import ActionManagerContainer
@@ -78,6 +78,7 @@ class GurpsMain(ShowBase, FSM.FSM):
         #   this will be injected instead
         self.entity_component_manager = EntityComponentManagerContainer.entity_component_manager()
         self.entity_model_manager = EntityModelManagerContainer.entity_model_manager()
+        self.being_model_manager = BeingModelManagerContainer.being_model_manager()
         self.entity_fsm_manager = EntityFsmManagerContainer.entity_fsm_manager()
 
         # Initialize grid.
@@ -104,9 +105,10 @@ class GurpsMain(ShowBase, FSM.FSM):
         self.action_manager = ActionManagerContainer.action_manager()
         self.turn_manager = TurnManagerContainer.turn_manager()
 
-        self.simulation_manager = SimulationManagerContainer.simulation_manager(self.grid_model,
-                                                                                self.entity_model_manager,
-                                                                                self.action_manager)
+        self.simulation_manager = SimulationManagerContainer.simulation_manager(grid_model=self.grid_model,
+                                                                                entity_model_manager=self.entity_model_manager,
+                                                                                being_model_manager=self.being_model_manager,
+                                                                                action_manager=self.action_manager)
 
         self.action_resolver = GenericResolverContainer.resolver()
         self.damage_handler = ConsciousnessHandlerContainer.consciousness_handler()
@@ -138,21 +140,13 @@ class GurpsMain(ShowBase, FSM.FSM):
         # TODO: actor setup system (character creation)
         # Initialize all players.
         for _ in range(3):
-            # TODO: load from config source.
-            ActorConfig.config.override({
-                'model_file': 'models/player.obj'
-            })
-
             character = self.character_creator.generate_character_via_normals(0.5)
-            ActorModel.config.override({
-                "character_model": character
-            })
+            actor = ActorComponentContainer.actor(parent=render, data_model=character)
 
-            actor = ActorNode.actor(render)
             # TODO: determine if this should be wired here "self.action_resolver_locator"
-            actor_fsm = ActorFsm.actor_fsm(data_model=actor.data_model,
-                                           behavior=HumanPlayerBehavior(),
-                                           action_resolver=self.action_resolver)
+            actor_fsm = ActorFsmContainer.actor_fsm(data_model=actor.data_model,
+                                                    behavior=HumanPlayerBehavior(),
+                                                    action_resolver=self.action_resolver)
             self.entity_component_manager[actor.id] = actor
             self.entity_fsm_manager[actor.id] = actor_fsm
 

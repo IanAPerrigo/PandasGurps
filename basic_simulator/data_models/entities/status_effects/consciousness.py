@@ -7,16 +7,10 @@ class Dead(StatusEffect):
     """
 
 
-DEAD = Dead()
-
-
 class NonExistent(StatusEffect):
     """
     Marking status effect. Has no direct effect on modifiers. Handled externally to the effect.
     """
-
-
-NON_EXISTENT = NonExistent()
 
 
 class HangingOnToConsciousness(StatusEffect):
@@ -25,13 +19,13 @@ class HangingOnToConsciousness(StatusEffect):
     """
 
 
-HANGING_ONTO_CONSCIOUSNESS = HangingOnToConsciousness()
-
-
 class Unconscious(StatusEffect):
     """
     Marking status effect. Has no direct effect on modifiers. Handled externally to the effect.
     """
 
 
-UNCONSCIOUS = Unconscious()
+class Inanimate(StatusEffect):
+    """
+    Marking status effect. Has no direct effect on modifiers. Handled externally to the effect.
+    """

@@ -73,10 +73,10 @@ class MeleeAttackResolver(ConsciousnessRequiredActionResolver):
             #  OR use default tool currently usable
             #  OR if ambiguous, fail
 
-            attacker_model = self.simulation_manager.entity_model_manager.get(action.actor)
-            defender_model = self.simulation_manager.entity_model_manager.get(selected_target)
-            attacker_char_model = attacker_model.character_model
-            defender_char_model = defender_model.character_model
+            attacker_model = self.simulation_manager.being_model_manager.get(action.actor)
+            defender_model = self.simulation_manager.being_model_manager.get(selected_target)
+            attacker_char_model = attacker_model
+            defender_char_model = defender_model
 
             # TODO: STUB: ignore existing tooling and use hardcoded values
             attacker_hit_score = 10

@@ -4,7 +4,7 @@ import uuid
 
 from direct.directnotify.DirectNotify import DirectNotify
 
-from containers.managers.entity_manager import EntityModelManagerContainer
+from containers.managers.entity_manager import BeingModelManagerContainer
 from event_handlers import consciousness
 import components.actors as actor_components
 
@@ -15,4 +15,4 @@ class ConsciousnessHandlerContainer(containers.DeclarativeContainer):
 
     consciousness_handler = providers.Singleton(
         consciousness.ConsciousnessHandler,
-        entity_model_manager=EntityModelManagerContainer.entity_model_manager, logger=logger)
+        being_model_manager=BeingModelManagerContainer.being_model_manager, logger=logger)

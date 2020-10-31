@@ -23,7 +23,7 @@ class MovementResolver(ConsciousnessRequiredActionResolver):
         actor = action.actor
 
         # Validate that number of hexes moved is less than the basic speed of the actor.
-        actor_model = self.simulation_manager.entity_model_manager[actor].character_model
+        actor_model = self.simulation_manager.being_model_manager.get(actor)
         curr_bm = actor_model.stats[StatType.CURR_BM.value]
         # TODO: replace hardcoded hex movement cost.
         hex_cost = 1

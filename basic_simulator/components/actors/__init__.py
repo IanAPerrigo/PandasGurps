@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from panda3d.core import PandaNode, TextNode
 from direct.fsm import FSM
 from direct.directnotify.DirectNotify import DirectNotify
@@ -8,12 +10,13 @@ from managers.simulation_manager import SimulationStateManager
 from managers.action_resolvers import GenericActionResolver
 from behaviors import Behavior
 from events.component.actors import RefreshStats
+from data_models.entities.being import Being
 
 
 class ActorFSM(FSM.FSM):
     def __init__(self,
                  # Describes the actor and its behavior.
-                 data_model, behavior: Behavior,
+                 data_model: Being, behavior: Behavior,
                  # Managers needed for the FSM to function.
                  simulation_manager: SimulationStateManager,
                  action_resolver: GenericActionResolver):
@@ -113,13 +116,14 @@ class ActorFSM(FSM.FSM):
 
 
 class ActorComponent(PandaNode, DirectObject):
-    def __init__(self, parent, data_model):
+    def __init__(self, parent, data_model: Being, model_file: str):
         PandaNode.__init__(self, "%s" % data_model.entity_id)
 
         self.id = data_model.entity_id
         self.parent = parent
         self.path = parent.attachNewNode(self)
         self.data_model = data_model
+        self.model_file = model_file
 
         self.health_bar = None
 
@@ -129,11 +133,11 @@ class ActorComponent(PandaNode, DirectObject):
         self._instantiate_self_()
 
     def refresh_stats(self):
-        stats = self.data_model.character_model.stats
+        stats = self.data_model.stats
         self.health_bar.node().setText("%d/%d" % (stats['CURR_HP'], stats['HP']))
 
     def _instantiate_self_(self):
-        actor = loader.loadModel(self.data_model.model_file)
+        actor = loader.loadModel(self.model_file)
         actor.reparentTo(self.path)
 
         # Set the initial position and scale.
@@ -144,7 +148,7 @@ class ActorComponent(PandaNode, DirectObject):
         actor.setDepthOffset(1)
 
         text_node = TextNode('health_bar')
-        stats = self.data_model.character_model.stats
+        stats = self.data_model.stats
         text_node.setText("%d/%d" % (stats['CURR_HP'], stats['HP']))
         text_path = actor.attachNewNode(text_node)
         text_path.setScale(0.5)

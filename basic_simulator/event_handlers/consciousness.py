@@ -1,17 +1,17 @@
 from direct.showbase.DirectObject import DirectObject
 
 from events import Event
-from managers.entity_manager import EntityModelManager
+from managers.entity_manager import BeingModelManager
 from utility.rolling import *
 from data_models.entities.stats import StatType
 from data_models.entities.status_effects.consciousness import *
 
 
 class ConsciousnessHandler(DirectObject):
-    def __init__(self, entity_model_manager: EntityModelManager, logger):
+    def __init__(self, being_model_manager: BeingModelManager, logger):
         super(ConsciousnessHandler, self).__init__()
 
-        self.entity_model_manager = entity_model_manager
+        self.being_model_manager = being_model_manager
         self.logger = logger
 
         # Register event that watches for damage to occur.
@@ -21,19 +21,20 @@ class ConsciousnessHandler(DirectObject):
 
     def apply_death(self, actor):
         # Death is absolute, and negates any other form of consciousness.
-        actor.add_status_effect(DEAD)
-        actor.remove_status_effect(HANGING_ONTO_CONSCIOUSNESS)
-        actor.remove_status_effect(UNCONSCIOUS)
+        if not actor.status_effects.is_affected_by(Dead):
+            actor.add_status_effect(Dead())
+        actor.remove_all_status_effects(HangingOnToConsciousness)
+        actor.remove_all_status_effects(Unconscious)
 
     def apply_unconscious(self, actor):
         # Consciousness is mutually exclusive with hanging on.
-        actor.add_status_effect(UNCONSCIOUS)
-        actor.remove_status_effect(HANGING_ONTO_CONSCIOUSNESS)
+        actor.add_status_effect(Unconscious())
+        actor.remove_all_status_effects(HangingOnToConsciousness)
 
     def apply_hanging_on(self, actor):
         # Hanging on is mutually exclusive with unconscious.
-        actor.add_status_effect(HANGING_ONTO_CONSCIOUSNESS)
-        actor.remove_status_effect(UNCONSCIOUS)
+        actor.add_status_effect(HangingOnToConsciousness())
+        actor.remove_all_status_effects(Unconscious)
 
     def below_zero(self, actor):
         ht = actor.stats[StatType.HT.value]
@@ -77,13 +78,13 @@ class ConsciousnessHandler(DirectObject):
             self.apply_hanging_on(actor)
 
     def assess_damage(self, actor_id, damage_taken):
-        actor = self.entity_model_manager[actor_id].character_model
+        actor = self.being_model_manager[actor_id]
 
         curr_hp = actor.stats[StatType.CURR_HP.value]
         total_hp = actor.stats[StatType.HP.value]
 
         # If the actor is non-existent, no reason to track status changes.
-        if NON_EXISTENT in actor.status_effects:
+        if actor.status_effects.is_affected_by(NonExistent):
             return
 
         # Has the damage taken changed the actors health to below zero.

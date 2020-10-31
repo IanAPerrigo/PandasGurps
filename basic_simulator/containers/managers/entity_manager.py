@@ -11,6 +11,13 @@ class EntityModelManagerContainer(containers.DeclarativeContainer):
     entity_model_manager = providers.Singleton(entity_manager.EntityModelManager)
 
 
+class BeingModelManagerContainer(containers.DeclarativeContainer):
+    config = providers.Configuration('config')
+    logger = providers.Singleton(logging.Logger, name="being_model_manager")
+
+    being_model_manager = providers.Singleton(entity_manager.BeingModelManager)
+
+
 class EntityFsmManagerContainer(containers.DeclarativeContainer):
     config = providers.Configuration('config')
     logger = providers.Singleton(logging.Logger, name="entity_fsm_manager")
@@ -23,4 +30,7 @@ class EntityComponentManagerContainer(containers.DeclarativeContainer):
     logger = providers.Singleton(logging.Logger, name="entity_component_manager")
 
     entity_component_manager = providers.Singleton(entity_manager.EntityComponentManager,
-                                                   entity_model_manager=EntityModelManagerContainer.entity_model_manager)
+                                                   entity_model_manager=EntityModelManagerContainer.entity_model_manager,
+                                                   being_model_manager=BeingModelManagerContainer.being_model_manager)
+
+

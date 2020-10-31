@@ -5,6 +5,9 @@ from data_models.entities.stats import StatType, StatSet, SecondaryStats, Primar
 from data_models.entities.modifiers import ModifiedStatSet
 
 
+from containers.entity import BeingModelContainer
+
+
 class CharacterCreator:
     def __init__(self):
         # TODO: configuration for different aspects of the character creator.
@@ -92,6 +95,6 @@ class CharacterCreator:
 
         modified_stat_set = ModifiedStatSet(stat_set)
 
-        character = Being(base_stats=stat_set, modified_stats=modified_stat_set)
+        character = BeingModelContainer.model(base_stats=stat_set, modified_stats=modified_stat_set)
         character.character_points = self.calculate_total(character)
         return character
