@@ -26,6 +26,7 @@ class ActionStatus(Enum):
 class Action:
     def __init__(self):
         self.status = ActionStatus.UNREADY
+        self.reason = None
         self.actor = None
 
     def set_actor(self, actor_id):

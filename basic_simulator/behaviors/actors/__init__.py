@@ -1,4 +1,4 @@
-from data_models.actions import MovementType, MovementAction, MeleeAttack
+from data_models.actions import MovementType, MovementAction, MeleeAttack, HarvestAction, EatAction
 from data_models.actions.maneuvers import MoveManeuver, MoveAttackManeuver, YieldTurnManeuver
 from data_models.actions import ActionStatus
 from data_models.state.simulation_state import SimulationState
@@ -9,7 +9,8 @@ class HumanPlayerBehavior(Behavior):
     """
     TODO: include movement interface as dep
     """
-    def __init__(self):
+    def __init__(self, entity_id):
+        self.entity_id = entity_id
         self.keys = None # TODO: should be a dep
         self.action_type = None
         self.maneuver_type = None
@@ -49,6 +50,12 @@ class HumanPlayerBehavior(Behavior):
         elif self.keys["r"] != 0:
             self.ready = True
             self.keys["r"] = 0
+        elif self.keys["h"] != 0:
+            self.action_type = "harvest" if self.action_type != "harvest" else None
+            self.keys["h"] = 0
+        elif self.keys["e"] != 0:
+            self.action_type = "eat" if self.action_type != "eat" else None
+            self.keys["e"] = 0
 
         # Extract vector events.
         if self.keys['VECTOR_NORTH_WEST'] != 0:
@@ -78,6 +85,12 @@ class HumanPlayerBehavior(Behavior):
             action = [MeleeAttack.in_direction(vector)]
         elif self.action_type == "movement" and vector is not None:
             action = [MovementAction(vector)]
+        elif self.action_type == "harvest":
+            action = [HarvestAction()]
+        elif self.action_type == "eat":
+            my_loc = state.grid.get_loc_of_obj(self.entity_id)
+            state.grid.get_at_loc(my_loc)
+            action = [EatAction()]
         else:
             # TODO: add NO-OP
             action = [MovementAction(MovementType.NONE)]

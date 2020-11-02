@@ -1,7 +1,7 @@
 from direct.fsm.FSM import FSM
 
 from managers.turn_manager import TurnManager
-from managers.action_resolvers import GenericActionResolver
+from managers.action_resolvers.generic import GenericActionResolver
 from managers.simulation_manager import SimulationStateManager
 from managers.entity_manager import EntityFsmManager
 from managers.interaction_event_manager import InteractionEventManager
@@ -133,6 +133,7 @@ class TurnManagementFSM(FSM):
 
                 # If the action resolution failed, no need to continue with resolution.
                 if action.status == ActionStatus.FAILED:
+                    self.logger.warning("Action failed to resolve: %s" % action.reason)
                     first_failed = action
                     break
 

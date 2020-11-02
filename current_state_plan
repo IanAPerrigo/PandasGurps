@@ -226,3 +226,8 @@ of 10x could make only 8640 turns per day (easier to simulate longer term behavi
 
 Other things might need to be done to ease computation, such as if an entity is not in the observation area of any other
 entity and the entity is resting / sleeping, dont consider it an actor.
+
+
+
+### IDEA ###
+Add decorators for common action related tasks (checking proximity, checking ranging, consciousness, )

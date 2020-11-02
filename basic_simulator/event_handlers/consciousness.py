@@ -23,17 +23,30 @@ class ConsciousnessHandler(DirectObject):
         # Death is absolute, and negates any other form of consciousness.
         if not actor.status_effects.is_affected_by(Dead):
             actor.add_status_effect(Dead())
+            self.logger.info("%s passed threshold of death." % actor.entity_id)
+        actor.remove_all_status_effects(HangingOnToConsciousness)
+        actor.remove_all_status_effects(Unconscious)
+
+    def apply_non_existent(self, actor):
+        # Death is absolute, and negates any other form of consciousness.
+        if not actor.status_effects.is_affected_by(NonExistent):
+            actor.add_status_effect(NonExistent())
+            self.logger.info("%s is unrecognizable." % actor.entity_id)
         actor.remove_all_status_effects(HangingOnToConsciousness)
         actor.remove_all_status_effects(Unconscious)
 
     def apply_unconscious(self, actor):
         # Consciousness is mutually exclusive with hanging on.
-        actor.add_status_effect(Unconscious())
+        if not actor.status_effects.is_affected_by(Unconscious):
+            actor.add_status_effect(Unconscious())
+            self.logger.info("%s fell unconscious." % actor.entity_id)
         actor.remove_all_status_effects(HangingOnToConsciousness)
 
     def apply_hanging_on(self, actor):
         # Hanging on is mutually exclusive with unconscious.
-        actor.add_status_effect(HangingOnToConsciousness())
+        if not actor.status_effects.is_affected_by(HangingOnToConsciousness):
+            actor.add_status_effect(HangingOnToConsciousness())
+            self.logger.info("%s is hanging onto consciousness." % actor.entity_id)
         actor.remove_all_status_effects(Unconscious)
 
     def below_zero(self, actor):
@@ -73,9 +86,9 @@ class ConsciousnessHandler(DirectObject):
             self.apply_death(actor)
         elif ht_result == ContestResults.Critical_Success:
             self.apply_hanging_on(actor)
-            # TODO: maybe another status that helps recovery.
         else:
-            self.apply_hanging_on(actor)
+            if not actor.status_effects.is_affected_by(Unconscious):
+                self.apply_hanging_on(actor)
 
     def assess_damage(self, actor_id, damage_taken):
         actor = self.being_model_manager[actor_id]
@@ -103,10 +116,8 @@ class ConsciousnessHandler(DirectObject):
         elif (-5 * total_hp) >= curr_hp > (-10 * total_hp):
             # Actor instantly dies.
             self.apply_death(actor)
-            self.logger.info("%s passed threshold of death." % actor_id)
         elif (-10 * total_hp) >= curr_hp:
-            actor.add_status_effect(NON_EXISTENT)
-            self.logger.info("%s is unrecognizable." % actor_id)
+            self.apply_non_existent(actor)
 
     def maintain_consciousness(self, actor_id):
         pass

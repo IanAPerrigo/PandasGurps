@@ -7,7 +7,7 @@ from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 
 from managers.simulation_manager import SimulationStateManager
-from managers.action_resolvers import GenericActionResolver
+from managers.action_resolvers.generic import GenericActionResolver
 from behaviors import Behavior
 from events.component.actors import RefreshStats
 from data_models.entities.being import Being

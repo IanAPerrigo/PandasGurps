@@ -1,11 +1,11 @@
 import numpy as np
 
-from . import SimulationStateManager, ConsciousnessRequiredActionResolver
+from . import SimulationStateManager, ActionResolver, require_consciousness
 from data_models.actions.action import ActionStatus
 from data_models.entities.stats import StatType
 
 
-class MovementResolver(ConsciousnessRequiredActionResolver):
+class MovementResolver(ActionResolver):
 
     # TODO: All state related managers (Grid, Actor, Environment, etc)
 
@@ -14,12 +14,8 @@ class MovementResolver(ConsciousnessRequiredActionResolver):
 
         self.logger = logger
 
+    @require_consciousness
     def resolve(self, action):
-        super(MovementResolver, self).resolve(action)
-
-        if action.status == ActionStatus.FAILED:
-            return
-        
         actor = action.actor
 
         # Validate that number of hexes moved is less than the basic speed of the actor.

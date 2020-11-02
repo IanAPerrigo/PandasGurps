@@ -37,11 +37,17 @@ class GridComponent(DirectObject, PandaNode):
                 offset_loc = cube_to_offset(location)
                 loc = self.path.find("location.%s.%s" % (offset_loc[0], offset_loc[1]))
                 component = self.entity_component_manager.get(target)
+                if component is None:
+                    continue
+
                 component_path = component.path
                 component_path.reparentTo(loc)
             elif change_name == "remove":
                 # TODO: find a good place to stick the objects not rendered out of the way.
                 component = self.entity_component_manager.get(target)
+                if component is None:
+                    continue
+
                 component_path = component.path
                 component_path.reparentTo(render)
 

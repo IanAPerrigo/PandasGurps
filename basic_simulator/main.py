@@ -26,7 +26,7 @@ from kivy_ui import OverlayApp
 
 # TODO: move to module that sets up resolvers
 from containers.managers.action_resolver import *
-from data_models.actions import MovementAction, MeleeAttack, ActionStatus
+from data_models.actions import MovementAction, MeleeAttack, ActionStatus, HarvestAction
 from data_models.actions.maneuvers import MoveManeuver, MoveAttackManeuver, YieldTurnManeuver
 from managers.character_creation import *
 
@@ -67,6 +67,8 @@ class GurpsMain(ShowBase, FSM.FSM):
                 'VECTOR_SOUTH_WEST',
                 'VECTOR_WEST',
                 'c',
+                'h',
+                'e',
                 'm',
                 'r',
                 'space'
@@ -95,6 +97,7 @@ class GurpsMain(ShowBase, FSM.FSM):
         ActionResolverLocatorContainer.config.override({
             MovementAction: MovementResolverContainer,
             MeleeAttack: MeleeAttackResolverContainer,
+            HarvestAction: HarvestResolverContainer,
             MoveManeuver: MoveManeuverResolverContainer,
             MoveAttackManeuver: MoveAttackManeuverResolverContainer,
             YieldTurnManeuver: YieldTurnManeuverResolverContainer,
