@@ -1,11 +1,13 @@
-from . import *
-
-from utility.rolling import *
-from data_models.actions.action import ActionStatus
-from events.component.actors import RefreshStats
-from events import Event
 from .decorators import require_consciousness, required_target
 from .generic import ActionResolver
+
+from managers.simulation_manager import SimulationStateManager
+from data_models.actions.action import ActionStatus
+from data_models.entities.being import Being
+
+from events.component.actors import RefreshStats
+from events import Event
+from utility.rolling import *
 
 
 class MeleeAttackResolver(ActionResolver):
@@ -18,7 +20,7 @@ class MeleeAttackResolver(ActionResolver):
         self.logger = logger
 
     @require_consciousness
-    @required_target(explicit=False)
+    @required_target(explicit=False, selection_type=Being)
     # TODO: make proximity able to derive from active weapon.
     #@require_proximity(from_active_weapon=True)
     def resolve(self, action):

@@ -16,13 +16,13 @@ class StatusSet:
             self.store[key] = list()
         self.store[key].append(status)
 
-    def get(self, status_type: type):
+    def get(self, status_type: type) -> list:
         return self.store.get(status_type)
 
-    def has(self, item: StatusEffect):
+    def has(self, item: StatusEffect) -> bool:
         return item in self.store[type(item)]
 
-    def is_affected_by(self, status_type: type):
+    def is_affected_by(self, status_type: type) -> bool:
         return status_type in self.store
 
     def remove(self, status: StatusEffect):

@@ -16,3 +16,7 @@ class RefreshStats:
     @staticmethod
     def register(id: uuid4, source: DirectObject, callback):
         Event.register("refresh_stats_%s" % id, source, callback)
+
+    @staticmethod
+    def unregister(id: uuid4, source: DirectObject):
+        Event.unregister("refresh_stats_%s" % id, source)

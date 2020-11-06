@@ -1,6 +1,8 @@
+from managers.simulation_manager import SimulationStateManager
+from managers.action_resolvers.generic import ActionResolver
+
 from data_models.actions.maneuvers.yield_turn import YieldTurnManeuver
 from data_models.actions import ActionStatus
-from .. import SimulationStateManager, ActionResolver
 
 
 class YieldTurnManeuverResolver(ActionResolver):

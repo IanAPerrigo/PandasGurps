@@ -1,6 +1,9 @@
+from managers.simulation_manager import SimulationStateManager
+from managers.action_resolvers.generic import ActionResolver
+from managers.action_resolvers.decorators import require_consciousness
+
 from data_models.actions.maneuvers.move_attack import MoveAttackManeuver
 from data_models.actions import ActionStatus
-from .. import SimulationStateManager, ActionResolver, require_consciousness
 
 
 class MoveAttackManeuverResolver(ActionResolver):

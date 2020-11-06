@@ -20,3 +20,47 @@ class StatusEffect:
 
     def __init__(self, modifiers: dict = None):
         self.modifiers = modifiers if modifiers is not None else dict()
+        self.added_at_tick = None
+        self.removed_at_tick = None
+        self.next_relevant_tick = None
+        self.active = False
+
+    def bootstrap(self, tick, time_scale):
+        """
+        Setup all tick information.
+        :param tick: The current tick
+        :param time_scale: Seconds/tick. Status effects with realtime updates will use this to
+        stay invariant to the scale.
+        :return:
+        """
+        raise NotImplementedError()
+
+    def update_tick(self, tick, time_scale):
+        raise NotImplementedError()
+
+
+class MonotonicallyDecreasingStatusEffect(StatusEffect):
+    def __init__(self, period_length_seconds, level, modifiers: dict = None):
+        super(MonotonicallyDecreasingStatusEffect, self).__init__(modifiers)
+
+        self.period_length_seconds = period_length_seconds
+        self.level = level
+
+    def bootstrap(self, tick, time_scale):
+        self.added_at_tick = tick
+        # Calculate ticks from [seconds / [seconds/tick]]. Drop fractional ticks.
+        ticks_per_period = self.period_length_seconds // time_scale
+        self.next_relevant_tick = self.added_at_tick + ticks_per_period
+        self.active = True
+
+    def update_tick(self, tick, time_scale):
+        """
+        If the update was called, then a threshold of the status has been met.
+        :param tick:
+        :param time_scale:
+        :return:
+        """
+        # Decrease the level and set the next update period.
+        self.level -= 1
+        ticks_per_period = self.period_length_seconds // time_scale
+        self.next_relevant_tick = tick + ticks_per_period

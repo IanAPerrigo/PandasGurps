@@ -64,14 +64,11 @@ class StatSet(MutableMapping):
         self._mapping = {}
 
         for stat_type in StatType:
-            self._mapping[stat_type.value] = 0
-
-        # if do_init:
-        #     self.init()
+            self._mapping[stat_type] = 0
 
     def init(self):
         for stat_type in StatType:
-            self._mapping[stat_type.value] = 0
+            self._mapping[stat_type] = 0
 
     def __getitem__(self, key):
         return self._mapping[key]

@@ -6,11 +6,13 @@ from direct.directnotify.DirectNotify import DirectNotify
 from direct.showbase.DirectObject import DirectObject
 from direct.task import Task
 
+from components.entities.generic import EntityComponent
 from managers.simulation_manager import SimulationStateManager
 from managers.action_resolvers.generic import GenericActionResolver
 from behaviors import Behavior
 from events.component.actors import RefreshStats
 from data_models.entities.being import Being
+from data_models.entities.stats.stat_set import StatType
 
 
 class ActorFSM(FSM.FSM):
@@ -115,44 +117,48 @@ class ActorFSM(FSM.FSM):
         return Task.again
 
 
-class ActorComponent(PandaNode, DirectObject):
-    def __init__(self, parent, data_model: Being, model_file: str):
-        PandaNode.__init__(self, "%s" % data_model.entity_id)
+class ActorComponent(EntityComponent):
+    def __init__(self, parent, data_model: Being, fsm: ActorFSM, model_file: str):
+        super(ActorComponent, self).__init__(parent, data_model, fsm, model_file)
 
-        self.id = data_model.entity_id
-        self.parent = parent
-        self.path = parent.attachNewNode(self)
-        self.data_model = data_model
-        self.model_file = model_file
-
+        # Components children to be instantiated on load.
+        self.path = None
         self.health_bar = None
-
-        # Attach event handlers
-        RefreshStats.register(self.id, self, self.refresh_stats)
-
-        self._instantiate_self_()
 
     def refresh_stats(self):
         stats = self.data_model.stats
-        self.health_bar.node().setText("%d/%d" % (stats['CURR_HP'], stats['HP']))
+        self.health_bar.node().setText("%d/%d" % (stats[StatType.CURR_HP], stats[StatType.HP]))
 
-    def _instantiate_self_(self):
-        actor = loader.loadModel(self.model_file)
+    def load(self):
+        # Load the model and attach it to our node.
+        self.path = self.parent.attachNewNode(self)
+        actor = loader.loadModel(self.model_file)  # TODO: maybe do this asynchronously.
         actor.reparentTo(self.path)
 
-        # Set the initial position and scale.
+        # Configure the location of the model (specific to the model itself).
         actor.setPos(0, 0, 0)
         actor.setScale(1)
         actor.setHpr(0, 0, 0)
         actor.setColor(.5, .5, .5, 0.5)
         actor.setDepthOffset(1)
 
+        # Setup the model's children.
         text_node = TextNode('health_bar')
         stats = self.data_model.stats
-        text_node.setText("%d/%d" % (stats['CURR_HP'], stats['HP']))
+        text_node.setText("%d/%d" % (stats[StatType.CURR_HP], stats[StatType.HP]))
         text_path = actor.attachNewNode(text_node)
         text_path.setScale(0.5)
         text_path.setHpr(0, 0, 0)
         text_path.setColor(1, 1, 1, 1)
         text_path.setPos(-0.5, -.1, 0)
         self.health_bar = text_path
+
+        # Attach event handlers
+        RefreshStats.register(self.id, self, self.refresh_stats)
+
+    def unload(self):
+        # Unload in reverse order. Unregister events.
+        RefreshStats.unregister(self.id, self)
+
+        # Unload the entire node.
+        self.path.removeNode()

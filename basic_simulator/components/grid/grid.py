@@ -68,8 +68,16 @@ class GridComponent(DirectObject, PandaNode):
         rbcnp = NodePath(rbc)
         rbcnp.reparentTo(grid)
 
+        # TODO: testing here for not rendering past 15 items ( off the screen) to see if not loading the models speeds up
+        #   loading times.
+        too_big = 15
+
         for y in range(self.data_model.x_size):
+            if y > too_big:
+                break
             for x in range(self.data_model.y_size):
+                if x > too_big:
+                    break
                 radius = 1
                 delta_x_center = math.sqrt(3) * radius  # DeltaX of centers = sqrt(3)*(r) / 2 + sqrt(3)*(r) / 2
                 delta_y_center = radius + (radius / 2)  # DeltaY = r + r/2

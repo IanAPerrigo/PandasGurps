@@ -68,6 +68,8 @@ Currently, movement and combat reference the stat set directly, meaning each of 
 Ideally, the modified stat set should be accessed instead of the regular stat set and both stat sets should be consistent with each other.
 The un-modified stat set should still be accessible (since any changes to base stats would happen there.
 
+### DONE ###
+Add decorators for common action related tasks (checking proximity, checking ranging, consciousness)
 
 ### PARTIALLY DONE ###
 Life cycle mechanics
@@ -199,14 +201,55 @@ Energy system:
 
 Breakdown (large feature):
 
-- Add harvest and eat first, and the status effects given from eating.
+
+# DONE # - Add harvest and eat first, and the status effects given from eating.
 - Next, add non-actor entities that count as food (maybe a status effect "edible")
-    - Also add meal entities that will eventually be able to be picked up.
+    # DONE # - Also add meal entities that will eventually be able to be picked up.
 - Next add a simple 'tick' event system where each turn the tick counter is incremented and an event is sent out.
     A note about this, statuses not tied directly to tick, a status_update event will be called from the tick event
     to keep order of operations in case some priority needs to arise. The status_update will handle registration of
     status updates on particular tick numbers.
-- Next modify the "eaten" and 'drank' status to be applied on character creation (both at level 0)
+    - Further expand on this.
+        The status effect object can be broken into a few types:
+        Countdown status effects: effects that expire after a period of time. This would be like shock, which ticks down over time.
+        Eternal status effects: always present like fed, hydrated, rest, etc.
+            Also: periodically updated
+        Triggered status effects: effects removed by certain circumstances
+        TODO: more?
+    - Handling keeping track of when to update (or potentially remove) status effects.
+        A generic way of updating a status effect from one place, without knowing the particulars of each status effect.
+        This means, some level of self management is required, but the different classes of statuses are treated as such
+        in a manager.
+
+        Add an update_tick function to the status effect class.
+        The update_tick function is only called when needed, and using a "next_relevant_tick" field in the status,
+        excessive updates can be ignored.
+        A flag controlling whether a status should be cleaned up will be the signal of if it should be removed.
+
+        e.g. ShockStatus:
+        # Generic fields from StatusEffect
+        tick_added = 0
+        tick_removed = None
+        next_relevant_tick = 1 # Every turn, shock has a modifier reduction.
+        active = True
+
+        update_tick(current_tick, time_scale)
+        # Update shock modifier
+        # check if status has expired
+        # if it has expired
+            active = False
+            next_relevant_tick = None
+            # tick_removed will be set by the manager
+        # if it didnt expire
+            next_relevant_tick += time_scale # Because there is a change every tick (regardless of scale)
+
+        - Now the manager either cleans up the status if it was deactivated or moves onto the next status.
+        In the case of eternal statuses, they are never deactivated (unless dead) and have longer time horizons.
+        Triggered status effects generally get deactivated when the event happens, assuming they wont need to be worried about here.
+
+
+
+- Next modify the "fed" and 'quenched' status to be applied on character creation (both at level 0)
     Data associated with each status should be:
         Period begin tick (so day intervals can be calculated to apply the starvation and dehydration updates)
 - Next, have the "EnergyHandler" event handler schedule events on status_update_manager for future status updates.
@@ -228,6 +271,30 @@ Other things might need to be done to ease computation, such as if an entity is 
 entity and the entity is resting / sleeping, dont consider it an actor.
 
 
+### IDEA ###
+Combat states (for determining if an actor is 'in combat')
+Required to determine if an actor can rest.
+
+Any combat action between two entities will cause combat to start.
+Combat is exited after a fixed time (10 seconds?)
 
 ### IDEA ###
-Add decorators for common action related tasks (checking proximity, checking ranging, consciousness, )
+Metrics idea for the energy system.
+Track the number of FP points gained/spent by each entity (to see utilization of energy)
+Track the number of meals and drinks consumed.
+
+
+### FEATURE ###
+For display purposes, have a map for every HumanView that assigns easier names for each entity / being
+(instead of the UUID used in the engine). The mapping will transform the easier labels to UUIDs when they are used in
+the engine.
+
+- Ability to change the labels of particular entities (for marking interesting behavior perhaps)
+
+### FEATURE ###
+a system to not to create and load every component for the world on the screen.
+Requires navigation arrows to move around, signaling the new components to render (and old ones to cull).
+further optimizations required to lower the memory footprint of the grid system
+    Areas of interest, areas around actors should be properly cached in memory.
+    Areas outside a certain radius should be unloaded and saved to disk (sqlite?)
+    Attempting to access a certain area outside of loaded cache bounds would cause a miss, and result in a chunk load into memory.

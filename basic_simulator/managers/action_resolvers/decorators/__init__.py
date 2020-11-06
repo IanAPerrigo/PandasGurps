@@ -1,5 +1,5 @@
 import random
-import numpy
+import numpy as np
 from decopatch import function_decorator, WRAPPED, F_ARGS, F_KWARGS
 
 from data_models.actions import ActionStatus
@@ -71,7 +71,7 @@ def require_target_type(target_type: type = None, fn=WRAPPED, f_args=F_ARGS, f_k
 
 
 @function_decorator
-def required_target(ignore_self=True, explicit=True, fn=WRAPPED, f_args=F_ARGS, f_kwargs=F_KWARGS):
+def required_target(ignore_self=True, explicit=True, selection_type: type = None, fn=WRAPPED, f_args=F_ARGS, f_kwargs=F_KWARGS):
     self, action = f_kwargs['self'], f_kwargs['action']
 
     # If there is already a target, evaluate the action.
@@ -94,22 +94,31 @@ def required_target(ignore_self=True, explicit=True, fn=WRAPPED, f_args=F_ARGS, 
     actor_loc = self.simulation_manager.grid_model.get_loc_of_obj(action.actor)
     if hasattr(action, 'direction') and action.direction is not None:
         dst_loc = np.add(action.direction.value, actor_loc)
-        dst_entities = self.simulation_manager.grid_model.get_at_loc(dst_loc)
+        dst_entities_by_id = self.simulation_manager.grid_model.get_at_loc(dst_loc)
     elif hasattr(action, 'location') and action.location is not None:
-        dst_entities = self.simulation_manager.grid_model.get_at_loc(action.location)
+        dst_entities_by_id = self.simulation_manager.grid_model.get_at_loc(action.location)
     else:
-        dst_entities = self.simulation_manager.grid_model.get_at_loc(actor_loc)
+        dst_entities_by_id = self.simulation_manager.grid_model.get_at_loc(actor_loc)
 
     # Remove the actor from the possible selections.
-    if ignore_self and action.actor in dst_entities:
-        dst_entities.remove(action.actor)
+    if ignore_self and action.actor in dst_entities_by_id:
+        dst_entities_by_id.remove(action.actor)
 
     # If no choices left, the action cant be resolved.
-    if len(dst_entities) == 0:
+    if len(dst_entities_by_id) == 0:
         action.status = ActionStatus.FAILED
         action.reason = "No entities left to randomly select from"
         return
     else:
-        action.target_id = random.choice(dst_entities)
+        # If there is a stipulation of selection type, pull down the data models to verify their type.
+        if selection_type is not None:
+            dst_entities = map(lambda e_id: self.simulation_manager.entity_model_manager[e_id], dst_entities_by_id)
+            # Filter only models with the selection type.
+            dst_entities_by_id = list(
+                map(lambda e: e.entity_id,
+                    filter(lambda e: isinstance(e, selection_type), dst_entities)
+                    )
+            )
+        action.target_id = random.choice(dst_entities_by_id)
 
     return fn(*f_args, **f_kwargs)

@@ -2,17 +2,22 @@ from direct.showbase.DirectObject import DirectObject
 
 from events import Event
 from managers.entity_manager import BeingModelManager
+from managers.status_effect_manager import StatusEffectManager
 from utility.rolling import *
 from data_models.entities.stats import StatType
 from data_models.entities.status_effects.consciousness import *
 
 
 class ConsciousnessHandler(DirectObject):
-    def __init__(self, being_model_manager: BeingModelManager, logger):
+    def __init__(self, being_model_manager: BeingModelManager,
+                 status_effect_manager: StatusEffectManager,
+                 logger):
         super(ConsciousnessHandler, self).__init__()
 
         self.being_model_manager = being_model_manager
-        self.logger = logger
+        self.status_effect_manager = status_effect_manager
+        self.logger = logger.newCategory(__name__)
+
 
         # Register event that watches for damage to occur.
         Event.register("actor_damaged", self, self.assess_damage)
@@ -22,32 +27,32 @@ class ConsciousnessHandler(DirectObject):
     def apply_death(self, actor):
         # Death is absolute, and negates any other form of consciousness.
         if not actor.status_effects.is_affected_by(Dead):
-            actor.add_status_effect(Dead())
+            self.status_effect_manager.add_status_effect_to_entity(actor.entity_id, Dead())
             self.logger.info("%s passed threshold of death." % actor.entity_id)
-        actor.remove_all_status_effects(HangingOnToConsciousness)
-        actor.remove_all_status_effects(Unconscious)
+        self.status_effect_manager.remove_all_status_effects_from_entity(actor.entity_id, HangingOnToConsciousness)
+        self.status_effect_manager.remove_all_status_effects_from_entity(actor.entity_id, Unconscious)
 
     def apply_non_existent(self, actor):
         # Death is absolute, and negates any other form of consciousness.
         if not actor.status_effects.is_affected_by(NonExistent):
-            actor.add_status_effect(NonExistent())
+            self.status_effect_manager.add_status_effect_to_entity(actor.entity_id, NonExistent())
             self.logger.info("%s is unrecognizable." % actor.entity_id)
-        actor.remove_all_status_effects(HangingOnToConsciousness)
-        actor.remove_all_status_effects(Unconscious)
+        self.status_effect_manager.remove_all_status_effects_from_entity(actor.entity_id, HangingOnToConsciousness)
+        self.status_effect_manager.remove_all_status_effects_from_entity(actor.entity_id, Unconscious)
 
     def apply_unconscious(self, actor):
         # Consciousness is mutually exclusive with hanging on.
         if not actor.status_effects.is_affected_by(Unconscious):
-            actor.add_status_effect(Unconscious())
+            self.status_effect_manager.add_status_effect_to_entity(actor.entity_id, Unconscious())
             self.logger.info("%s fell unconscious." % actor.entity_id)
-        actor.remove_all_status_effects(HangingOnToConsciousness)
+        self.status_effect_manager.remove_all_status_effects_from_entity(actor.entity_id, HangingOnToConsciousness)
 
     def apply_hanging_on(self, actor):
         # Hanging on is mutually exclusive with unconscious.
         if not actor.status_effects.is_affected_by(HangingOnToConsciousness):
-            actor.add_status_effect(HangingOnToConsciousness())
+            self.status_effect_manager.add_status_effect_to_entity(actor.entity_id, HangingOnToConsciousness())
             self.logger.info("%s is hanging onto consciousness." % actor.entity_id)
-        actor.remove_all_status_effects(Unconscious)
+        self.status_effect_manager.remove_all_status_effects_from_entity(actor.entity_id, Unconscious)
 
     def below_zero(self, actor):
         ht = actor.stats[StatType.HT.value]

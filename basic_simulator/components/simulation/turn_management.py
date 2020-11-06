@@ -5,6 +5,7 @@ from managers.action_resolvers.generic import GenericActionResolver
 from managers.simulation_manager import SimulationStateManager
 from managers.entity_manager import EntityFsmManager
 from managers.interaction_event_manager import InteractionEventManager
+from managers.tick_manager import TickManager
 
 from data_models.actions import ActionStatus
 from data_models.actions.maneuvers import YieldTurnManeuver
@@ -13,9 +14,13 @@ from events import Event
 
 
 class TurnManagementFSM(FSM):
-    def __init__(self, turn_manager: TurnManager, action_resolver: GenericActionResolver,
-                 simulation_manager: SimulationStateManager, entity_fsm_manager: EntityFsmManager,
-                 interaction_event_manager: InteractionEventManager, logger):
+    def __init__(self, turn_manager: TurnManager,
+                 action_resolver: GenericActionResolver,
+                 simulation_manager: SimulationStateManager,
+                 entity_fsm_manager: EntityFsmManager,
+                 interaction_event_manager: InteractionEventManager,
+                 tick_manager: TickManager,
+                 logger):
         super(TurnManagementFSM, self).__init__(TurnManagementFSM.__name__)
 
         self.turn_manager = turn_manager
@@ -23,10 +28,12 @@ class TurnManagementFSM(FSM):
         self.simulation_manager = simulation_manager
         self.entity_fsm_manager = entity_fsm_manager
         self.interaction_event_manager = interaction_event_manager
-        self.logger = logger
+        self.tick_manager = tick_manager
+        self.logger = logger.newCategory(__name__)
 
     def enterManagerSetup(self):
         self.turn_manager.generate_turn_order()
+        self.tick_manager.tick()
         self.demand("NextTurn")
 
     def enterNextTurn(self):
@@ -46,16 +53,22 @@ class TurnManagementFSM(FSM):
         self.turn_manager.advance_turn()
         curr_actor = self.turn_manager.get_current_actor()
 
-        # If the top of the round was reached, regenerate the turn order.
+        # If the top of the round was reached, regenerate the turn order and tick 1 period of time.
         if curr_actor is None:
             self.turn_manager.generate_turn_order()
             self.turn_manager.advance_turn()
+            self.tick_manager.tick()
 
         # Begin the actors turn.
         self.demand("TurnBegin")
 
     def enterTurnBegin(self):
         curr_actor = self.turn_manager.get_current_actor()
+
+        # If there are no actors, wait for a transition from the turn_begin state.
+        # TODO: listen to an event for when a character is added.
+        if curr_actor is None:
+            return
 
         # Determine if this actor can take a turn.
         character_model = self.simulation_manager.being_model_manager.get(curr_actor)
