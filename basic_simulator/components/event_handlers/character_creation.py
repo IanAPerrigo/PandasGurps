@@ -1,11 +1,14 @@
 import numpy as np
+import random
 from direct.showbase.DirectObject import DirectObject
 
 from events import Event
 
 from managers.status_effect_manager import StatusEffectManager
-from managers.action_resolvers.generic import GenericActionResolver
+from managers.simulation_manager import SimulationStateManager
 from managers.entity_manager import EntityComponentManager
+
+from behaviors.actors import *
 
 from data_models.entities.being import Being
 from data_models.entities.stats import StatType, StatSet, SecondaryStats, PrimaryStats, get_derived
@@ -14,10 +17,15 @@ from data_models.entities.status_effects.energy import *
 
 
 class CharacterCreator(DirectObject):
-    def __init__(self, action_resolver: GenericActionResolver,
+    def __init__(self,
+                 simulation_manager: SimulationStateManager,
                  entity_component_manager: EntityComponentManager,
                  status_effect_manager: StatusEffectManager,
                  being_factory,
+                 human_behavior_factory,
+                 ai_behavior_factory,
+                 being_fsm_factory,
+                 being_component_factory,
                  ):
         super(CharacterCreator, self).__init__()
         # TODO: configuration for different aspects of the character creator.
@@ -25,18 +33,22 @@ class CharacterCreator(DirectObject):
         #   - rules on what skills, advantages, items, etc are allowed.
         #   - contextual rules on what selections can be made together (exclusivity, etc)
         #   - costs for different stats, skills, adv/dis, etc.
-        self.action_resolver = action_resolver
+        self.simulation_manager = simulation_manager
         self.entity_component_manager = entity_component_manager
         self.status_effect_manager = status_effect_manager
         self.being_factory = being_factory
+        self.human_behavior_factory = human_behavior_factory
+        self.ai_behavior_factory = ai_behavior_factory
+        self.being_fsm_factory = being_fsm_factory
+        self.being_component_factory = being_component_factory
 
         Event.register("generate_random_character", self, self.generate_random_character)
 
-    def generate_random_character(self):
+    def generate_random_character(self, behavior_type: type):
         stats = self.generate_stats_via_normals(0.5)
-        self.generate_character(base_stats=stats)
+        self.generate_character(behavior_type, base_stats=stats)
 
-    def generate_character(self, base_stats: StatSet, inventory=None, skills=None):
+    def generate_character(self, behavior_type: type, base_stats: StatSet, inventory=None, skills=None, loc=None):
         """
         Given all the parts of a character, create a full data model for the character (including all required statuses,
         etc.
@@ -45,11 +57,13 @@ class CharacterCreator(DirectObject):
         modified_stats = ModifiedStatSet(base_stats)
         actor_model = self.being_factory(base_stats=base_stats, modified_stats=modified_stats)
 
-        behavior = HumanPlayerBehavior(actor_model.entity_id)
-        actor_fsm = ActorFsmContainer.fsm(data_model=actor_model,
-                                          behavior=behavior,
-                                          action_resolver=self.action_resolver)
-        actor = ActorComponentContainer.component(data_model=actor_model, fsm=actor_fsm)
+        if behavior_type == HumanPlayerBehavior:
+            behavior = self.human_behavior_factory(actor_model.entity_id)
+        else:
+            behavior = self.ai_behavior_factory(actor_model.entity_id)
+
+        fsm = self.being_fsm_factory(data_model=actor_model, behavior=behavior)
+        actor = self.being_component_factory(data_model=actor_model, fsm=fsm)
 
         self.entity_component_manager[actor.id] = actor
 
@@ -58,10 +72,19 @@ class CharacterCreator(DirectObject):
         #  are known.
         required_status_effects = [Fed(), Hydrated(), Starving(), Dehydrated()] # TODO: the rest here.
         for status_effect in required_status_effects:
-            self.status_effect_manager.add_status_effect_to_entity(entity_id, status_effect)
+            self.status_effect_manager.add_status_effect_to_entity(actor_model.entity_id, status_effect)
 
-        return character
+        # TODO: probably want to add everything after this to a different manager that registers entities for drawing.
+        actor.load()
 
+        # Add the entity to the grid.
+        if loc is None:
+            # Generate a random location.
+            grid = self.simulation_manager.grid_model
+            loc = (random.randint(0, grid.x_size-1), random.randint(0, grid.y_size-1))
+            grid.insert(loc, actor.id)
+        else:
+            self.simulation_manager.grid_model.insert(loc, actor.id)
     # TODO: create the genetics stat / adv / dis generator here.
 
     def generate_stats_via_normals(self, rho, defaults=None):

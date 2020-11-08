@@ -22,7 +22,7 @@ class DataModels(containers.DeclarativeContainer):
         y_size=config.grid.y_size
     )
 
-    being_model = providers.Singleton(
+    being_model = providers.Factory(
         Being,
         entity_id=uuid
     )

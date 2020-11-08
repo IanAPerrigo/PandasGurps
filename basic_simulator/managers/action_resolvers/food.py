@@ -3,7 +3,6 @@ import numpy as np
 from .generic import ActionResolver
 from .decorators import require_proximity, require_target_type, require_consciousness, required_target
 
-from containers.components.entities.food import BasicMealComponentContainer
 from managers.simulation_manager import SimulationStateManager
 
 from data_models.actions.action import ActionStatus

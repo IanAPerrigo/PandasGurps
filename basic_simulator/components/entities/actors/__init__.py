@@ -18,13 +18,15 @@ from data_models.entities.stats.stat_set import StatType
 class ActorFSM(FSM.FSM):
     def __init__(self,
                  # Describes the actor and its behavior.
-                 data_model: Being, behavior: Behavior,
+                 data_model: Being,
+                 behavior: Behavior,
                  # Managers needed for the FSM to function.
                  simulation_manager: SimulationStateManager,
-                 action_resolver: GenericActionResolver):
+                 logger
+                 ):
         FSM.FSM.__init__(self, 'fsm_%r' % data_model.entity_id)
 
-        self.logger = DirectNotify().newCategory(type(self).__name__)
+        self.logger = logger.newCategory(__name__)
         self.data_model = data_model
 
         # TODO: Should be derived / configured based on a factory, and allow overriding to support any behavior.
@@ -33,7 +35,6 @@ class ActorFSM(FSM.FSM):
         self.yield_turn = None
         self.step_complete = None
         self.simulation_manager = simulation_manager
-        self.action_resolver = action_resolver
         self.poll_task = None
         self.keys = None # TODO: Replace with key manager later
 
@@ -118,11 +119,14 @@ class ActorFSM(FSM.FSM):
 
 
 class ActorComponent(EntityComponent):
-    def __init__(self, parent, data_model: Being, fsm: ActorFSM, model_file: str):
+    def __init__(self,
+                 parent,
+                 data_model: Being,
+                 fsm: ActorFSM,
+                 model_file: str):
         super(ActorComponent, self).__init__(parent, data_model, fsm, model_file)
 
         # Components children to be instantiated on load.
-        self.path = None
         self.health_bar = None
 
     def refresh_stats(self):
@@ -131,7 +135,6 @@ class ActorComponent(EntityComponent):
 
     def load(self):
         # Load the model and attach it to our node.
-        self.path = self.parent.attachNewNode(self)
         actor = loader.loadModel(self.model_file)  # TODO: maybe do this asynchronously.
         actor.reparentTo(self.path)
 

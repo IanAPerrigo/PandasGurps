@@ -1,6 +1,6 @@
 from dependency_injector.wiring import Provider
 
-from managers import SimulationStateManager
+from managers.simulation_manager import SimulationStateManager
 from managers.action_resolver_locator import ActionResolverLocator
 
 from data_models.actions import Action
@@ -11,13 +11,13 @@ class GenericActionResolver:
     Locates and dispatches the correct resolver for an action type.
     Fills the dependencies required for each resolver.
     """
-    def __init__(self, resolvers_for_type: dict, simulation_manager: SimulationStateManager):
+    def __init__(self, resolvers_for_type, simulation_manager: SimulationStateManager):
         self.__resolvers = resolvers_for_type
         self.simulation_manager = simulation_manager
 
     def resolve(self, action: Action):
         # Obtain the provider, construct it, and resolve the action.
-        resolver_provider = self.__resolvers.get(type(action))
+        resolver_provider = self.__resolvers(type(action))
         action_resolver = resolver_provider()
         action_resolver.resolve(action)
 

@@ -25,6 +25,8 @@ class GridModel:
 
         return g
 
+    # TODO: this will have a "radius" parameter (L1 norm / manhattan) in the future to support large grids.
+    #   The radius will serve as a query parameter for the DB later, as to not pull in more chunks.
     def get_contents(self):
         flat_contents = copy.deepcopy(self._obj_loc)
         contents = {k: self._unflat(v) for k, v in flat_contents.items()}

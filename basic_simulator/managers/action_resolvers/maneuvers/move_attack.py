@@ -12,7 +12,7 @@ class MoveAttackManeuverResolver(ActionResolver):
     TODO: description
     """
 
-    def __init__(self, simulation_manager: SimulationStateManager, logger, generic_resolver):
+    def __init__(self, simulation_manager: SimulationStateManager, logger, generic_resolver=None):
         super(MoveAttackManeuverResolver, self).__init__(simulation_manager)
 
         self.logger = logger

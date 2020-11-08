@@ -32,17 +32,21 @@ class StatusEffectManager:
 
     def bootstrap_status_effects(self, tick, time_scale):
         # Bootstrap all new status effects
-        for entity_id, status_effect in self.new_status_effects.items():
-            status_effect.bootstrap(tick, time_scale)
+        for entity_id, status_effects in self.new_status_effects.items():
+            for status_effect in status_effects:
+                status_effect.bootstrap(tick, time_scale)
 
         self.new_status_effects.clear()
 
     def tick_status_effects(self, tick, time_scale):
         for entity_id, model in self.simulation_manager.entity_model_manager.items():
             # Filter status effects requiring tick, and apply the tick.
-            statuses_requiring_tick = list(filter(lambda se: se.active and se.next_relevant_tick <= tick, model.status_effects))
-            map(lambda se: se.update_tick(tick, time_scale), statuses_requiring_tick)
+            statuses_requiring_tick = list(filter(lambda se: se.active and se.next_relevant_tick <= tick,
+                                                  model.status_effects.items()))
+            for se in statuses_requiring_tick:
+                se.update_tick(tick, time_scale)
 
             # Gather and cleanup the deactivated statuses.
-            deactivated_statuses = filter(lambda se: not se.active, statuses_requiring_tick)
-            map(lambda se: self.remove_status_effect_from_entity(entity_id, se), deactivated_statuses)
+            deactivated_statuses = filter(lambda se: not se.active, model.status_effects.items())
+            for se in deactivated_statuses:
+                self.remove_status_effect_from_entity(entity_id, se)

@@ -1,4 +1,5 @@
 import sys
+from dependency_injector import providers
 from dependency_injector.wiring import Provide
 
 from direct.showbase.ShowBase import ShowBase
@@ -12,19 +13,22 @@ from components.event_handlers.consciousness import ConsciousnessHandler
 from components.grid.grid import GridComponent
 from components.main import GurpsMain
 
+from managers.simulation_manager import SimulationStateManager
 from data_models.actions import *
+from data_models.actions.maneuvers import *
 
 
 def run_app(
-        show_base: ShowBase = Provide[app_containers.Application.components.show_base],
-        render: ShowBase = Provide[app_containers.Application.components.render],
-        camera: Camera = Provide[app_containers.Application.components.camera],
-        lighting: Lighting = Provide[app_containers.Application.components.lighting],
+        show_base: ShowBase = Provide[app_containers.Application.core.show_base],
+        render: ShowBase = Provide[app_containers.Application.core.render],
+        camera: Camera = Provide[app_containers.Application.core.camera],
+        lighting: Lighting = Provide[app_containers.Application.core.lighting],
         kivy_app: OverlayApp = Provide[app_containers.Application.gui.overlay_panel],
-        consciousness_handler: ConsciousnessHandler = Provide[app_containers.Application.components.consciousness_handler],
-        turn_management_fsm: TurnManagementFSM = Provide[app_containers.Application.components.turn_management_fsm],
+        simulation_manager: SimulationStateManager = Provide[app_containers.Application.managers.simulation_manager],
+        consciousness_handler: ConsciousnessHandler = Provide[app_containers.Application.direct_objects.consciousness_handler],
+        turn_management_fsm: TurnManagementFSM = Provide[app_containers.Application.fsms.turn_management_fsm],
         main_fsm: GurpsMain = Provide[app_containers.Application.components.main_fsm],
-        grid_component: GridComponent = Provide[app_containers.Application.components.grid]
+        grid_component: GridComponent = Provide[app_containers.Application.visual.grid]
 ):
     # Setup camera and lighting
     camera.setup()
@@ -41,7 +45,6 @@ def run_app(
     show_base.run()
 
 
-
 application = app_containers.Application()
 
 application.config.from_dict({
@@ -52,6 +55,7 @@ application.config.from_dict({
         },
 
     },
+    "behaviors": {},
     'managers': {
         'interaction': {
             "event_types": [
@@ -75,18 +79,9 @@ application.config.from_dict({
             'tick_value': 0,
             'tick_rate': 1
         },
-        'resolver_locator': {
-            'resolvers_for_type': {
-                MovementAction: app_containers.Application.action_resolvers.movement_action_resolver,
-                # MeleeAttack: MeleeAttackResolverContainer,
-                # HarvestAction: HarvestResolverContainer,
-                # MoveManeuver: MoveManeuverResolverContainer,
-                # MoveAttackManeuver: MoveAttackManeuverResolverContainer,
-                # YieldTurnManeuver: YieldTurnManeuverResolverContainer,
-            }
-        }
     },
-    "components": {
+    "action_resolvers": {},
+    "core": {
         "camera": {
             'background_color': (.2, .2, .2, 1),
             'fov': 75,
@@ -101,8 +96,36 @@ application.config.from_dict({
             'directional_specular_color': (1, 1, 1, 1)
         }
     },
+    "direct_objects": {},
+    "fsms": {},
+    "visual": {
+        'being': {
+            'model_file': 'models/player.obj'
+        }
+    },
+    "gui": {},
 
 })
 
+resolvers_for_type = {
+    MovementAction: application.action_resolvers.movement_resolver,
+    MeleeAttack: application.action_resolvers.melee_attack_resolver,
+    HarvestAction: application.action_resolvers.harvest_resolver,
+    EatAction: application.action_resolvers.eat_resolver,
+
+    MoveManeuver: application.maneuver_resolvers.movement_resolver,
+    MoveAttackManeuver: application.maneuver_resolvers.move_attack_resolver,
+    YieldTurnManeuver: application.maneuver_resolvers.yield_turn_resolver,
+}
+
+
+def get_resolver(action_type: type):
+    return resolvers_for_type[action_type]
+
+
+# Janky, but it works. Relies on the main container context to perform the resolution.
+application.action_resolvers.get_resolver.override(get_resolver)
+
 application.wire(modules=[sys.modules[__name__]])
+
 run_app()

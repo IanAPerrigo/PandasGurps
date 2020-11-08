@@ -35,3 +35,9 @@ class StatusSet:
 
     def remove_all(self, status_type: type):
         self.store.pop(status_type)
+
+    def items(self):
+        statuses = []
+        for status_list in self.store.values():
+            statuses.extend(status_list)
+        return statuses

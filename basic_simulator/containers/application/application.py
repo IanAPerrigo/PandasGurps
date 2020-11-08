@@ -1,18 +1,28 @@
 from dependency_injector import containers, providers
+from direct.directnotify.DirectNotify import DirectNotify
 
 from containers.data_models import DataModels
-from containers.components import Components
+from containers.behaviors import Behaviors
+from containers.components import Components, CoreComponents, DirectObjects, Fsm, Visual
 from containers.managers import Managers
-from containers.action_resolvers import ActionResolvers
+from containers.action_resolvers import ActionResolvers, ManeuverResolvers
 from containers.gui import GUI
 
 
 class Application(containers.DeclarativeContainer):
     config = providers.Configuration()
+    logger = providers.Singleton(
+        DirectNotify
+    )
 
     data_models = providers.Container(
         DataModels,
         config=config.data_models
+    )
+
+    behaviors = providers.Container(
+        Behaviors,
+        config=config.behaviors
     )
 
     managers = providers.Container(
@@ -23,20 +33,57 @@ class Application(containers.DeclarativeContainer):
 
     action_resolvers = providers.Container(
         ActionResolvers,
-        config=config.managers,
+        config=config.action_resolvers,
+        managers=managers
+    )
+
+    maneuver_resolvers = providers.Container(
+        ManeuverResolvers,
+        managers=managers,
+        action_resolvers=action_resolvers
+    )
+
+    # Components
+    core = providers.Container(
+        CoreComponents,
+        config=config.core,
+    )
+
+    direct_objects = providers.Container(
+        DirectObjects,
+        config=config.direct_objects,
+        managers=managers
+    )
+
+    fsms = providers.Container(
+        Fsm,
+        config=config.fsms,
+        managers=managers,
+        action_resolvers=action_resolvers
+    )
+
+    visual = providers.Container(
+        Visual,
+        config=config.visual,
+        core=core,
+        fsms=fsms,
+        data_models=data_models,
         managers=managers
     )
 
     components = providers.Container(
         Components,
         config=config.components,
+        data_models=data_models,
         managers=managers,
         action_resolvers=action_resolvers,
-        data_models=data_models
+        behaviors=behaviors,
+        fsms=fsms,
+        visual=visual
     )
 
     gui = providers.Container(
         GUI,
         config=config.gui,
-        components=components
+        core=core
     )
