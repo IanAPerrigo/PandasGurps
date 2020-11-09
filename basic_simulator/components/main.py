@@ -3,7 +3,8 @@ from direct.fsm import FSM
 from events import Event
 from components.simulation.turn_management import TurnManagementFSM
 from components.event_handlers.character_creation import CharacterCreator
-from behaviors.actors import *
+from behaviors.actors.ai import AiBehavior
+from behaviors.actors import HumanPlayerBehavior
 
 
 class GurpsMain(FSM.FSM):
@@ -64,7 +65,8 @@ class GurpsMain(FSM.FSM):
         #     loc = (random.randint(0,9), random.randint(0,9))
         #     self.grid_model.insert(loc, actor.id)
 
-        Event.signal("generate_random_character", HumanPlayerBehavior)
+        for _ in range(3):
+            Event.signal("generate_random_character", AiBehavior)
 
         Event.signal("notify_grid_update")
 

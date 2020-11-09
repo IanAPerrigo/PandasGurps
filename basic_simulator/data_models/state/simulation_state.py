@@ -2,18 +2,18 @@ from data_models.grid import GridModel
 
 
 class SimulationState:
-    def __init__(self, grid: GridModel, actors=None):
+    def __init__(self, grid: GridModel, actors: dict):
         """
         Inputs to this class are game objects.
         :param grid:
         """
         self.grid = grid
-        self.actors = actors if actors is not None else []
+        self.actors = actors if actors is not None else {}
         # TODO: a map of entities by id
 
 
 class ObjectiveSimulationState(SimulationState):
-    def __init__(self, grid: GridModel, actors=None):
+    def __init__(self, grid: GridModel, actors: dict):
         """
         Inputs to this class are game objects. Data objects are derived from these
         game objects to create subjective state.
@@ -25,7 +25,7 @@ class ObjectiveSimulationState(SimulationState):
 
 
 class SubjectiveSimulationState(SimulationState):
-    def __init__(self, grid: GridModel, actors=None):
+    def __init__(self, grid: GridModel, actors: dict):
         """
         Inputs to this class are game objects. Data objects are derived from these
         game objects to create subjective state.

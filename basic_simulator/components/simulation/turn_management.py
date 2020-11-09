@@ -105,7 +105,8 @@ class TurnManagementFSM(FSM):
         self.demand("TurnLoop")
 
     def enterTurnLoop(self, *args):
-        self.logger.info("[TurnLoop] entering")
+        #self.logger.info("[TurnLoop] entering")
+        pass
 
     def filterTurnLoop(self, request, args):
         """
@@ -114,13 +115,14 @@ class TurnManagementFSM(FSM):
         :param args:
         :return:
         """
-        self.logger.info("[TurnLoop] filtering (%s)" % request)
+        #self.logger.info("[TurnLoop] filtering (%s)" % request)
 
         if request == 'NextTurn':
             return 'NextTurn'
 
     def exitTurnLoop(self):
-        self.logger.info("[TurnLoop] exiting")
+        #self.logger.info("[TurnLoop] exiting")
+        pass
 
     def _yield_turn(self):
         # Only directly yield a turn if the state isn't already transitioning.

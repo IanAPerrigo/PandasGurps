@@ -15,6 +15,7 @@ from components.main import GurpsMain
 
 from managers.simulation_manager import SimulationStateManager
 from data_models.actions import *
+from data_models.actions.observation import *
 from data_models.actions.maneuvers import *
 
 
@@ -112,6 +113,7 @@ resolvers_for_type = {
     MeleeAttack: application.action_resolvers.melee_attack_resolver,
     HarvestAction: application.action_resolvers.harvest_resolver,
     EatAction: application.action_resolvers.eat_resolver,
+    ObservationAction: application.action_resolvers.observation_resolver,
 
     MoveManeuver: application.maneuver_resolvers.movement_resolver,
     MoveAttackManeuver: application.maneuver_resolvers.move_attack_resolver,

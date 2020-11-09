@@ -211,12 +211,12 @@ Breakdown (large feature):
     status updates on particular tick numbers.
     - Further expand on this.
         The status effect object can be broken into a few types:
-        Countdown status effects: effects that expire after a period of time. This would be like shock, which ticks down over time.
-        Eternal status effects: always present like fed, hydrated, rest, etc.
-            Also: periodically updated
-        Triggered status effects: effects removed by certain circumstances
+        # DONE # Countdown status effects: effects that expire after a period of time. This would be like shock, which ticks down over time.
+        # DONE # Eternal status effects: always present like fed, hydrated, rest, etc.
+            # DONE # Also: periodically updated
+        # DONE # Triggered status effects: effects removed by certain circumstances
         TODO: more?
-    - Handling keeping track of when to update (or potentially remove) status effects.
+    # DONE # - Handling keeping track of when to update (or potentially remove) status effects.
         A generic way of updating a status effect from one place, without knowing the particulars of each status effect.
         This means, some level of self management is required, but the different classes of statuses are treated as such
         in a manager.
@@ -249,14 +249,40 @@ Breakdown (large feature):
 
 
 
-- Next modify the "fed" and 'quenched' status to be applied on character creation (both at level 0)
+# DONE # - Next modify the "fed" and 'quenched' status to be applied on character creation (both at level 0)
     Data associated with each status should be:
         Period begin tick (so day intervals can be calculated to apply the starvation and dehydration updates)
-- Next, have the "EnergyHandler" event handler schedule events on status_update_manager for future status updates.
-    - A decision point here: should extra food eaten in a day be a reward?
-        Maybe at the expiration of the food period for the day, only 3 meals are subtracted, allowing anything else to
-        be a sort of "reserve". So an actor with extra food intake can survive without food longer (only works for food)
 
+
+- After all status updates have been completed, update the triggered status effects.
+    ### TO FIX ### - Currently starvation and dehydration increase in level on the tick update.
+    This is wrong, they should update after a trigger (once every status is updated) to determine if the actor is
+    starving or dehydrated. However, the tick update could be used to apply periodic penalties, such as dehydration's
+    -1 FP per 8 hours.
+
+        - e.g When an entity is created, the EnergyHandler will be called register events for watching food and water
+        consumption at certain periods (for starvation and dehydration). The status_effect_manager will emit events for
+        every trigger seen. For instance, Starvation and hydration trigger at the same tick, so after calling their
+        update_tick, an attribute on the status is read 'triggered' that gives a list of all the times it triggered.
+        The manager will then emit events for each tick the trigger occurred "dehydration_trigger", "starvation_trigger", etc.
+        The id of the entity will be passed along, and the trigger can be processed.
+
+- Adding a way to differentiate status types so that every status doesnt have to be enumerated.
+    IDEA: the status_set object is a type keyed dictionary, and the is_afflicted_by() queries to see if the key is present.
+    To support differentiation based on status core type, add and remove can determine if each status added inherits from
+    one of the core types of interest.
+
+    e.g.
+    add(status_type: type) or remove
+        # Care about
+        # TriggeredStatus: Are triggered after a tick_update (and should emit an event)
+        # PeriodicStatus: Are updated with tick_update on the next relevant tick
+        # AperiodicStatus: Are not updated ever with tick_update.
+        if issubclass(status_type, TriggeredStatus):
+            # Add to dictionary under TriggeredStatus
+
+
+- Adding and managing the modifiers
 
 ### FEATURE IDEA ###
 Due to balancing concerns, the time frames between micro-gurps and macro-gurps could create a nightmare for simulation.
@@ -298,3 +324,81 @@ further optimizations required to lower the memory footprint of the grid system
     Areas of interest, areas around actors should be properly cached in memory.
     Areas outside a certain radius should be unloaded and saved to disk (sqlite?)
     Attempting to access a certain area outside of loaded cache bounds would cause a miss, and result in a chunk load into memory.
+
+
+
+
+
+
+
+
+### PERFORMANCE NOTES ###
+Did a simple test with a behavior that only yields when it is asked to act.
+num actors | t/s
+1 | 2100
+2 | 950
+3 | 560
+4 | 370
+5 | 275
+
+First glance is ~ 1/n for n actors.
+Further analysis shows that there is a constant cost in SINGLE ACTOR performance per turn.
+This is due to the subjective state generation (the grid model is copied EVERY turn)
+A better way would be to use the objective grid, and to manage entities in a subjective grid through observations.
+
+### NEW FEATURE ###
+Better grid management.
+
+Goals:
+- Scalability:
+    Support very large grids by using a chunking system. Chunks will be stored on disk (maybe sqlite) and loaded only
+    when needed. This will remove the memory footprint for large worlds.
+
+    Very large grids are sparse. Create a system for representing only areas that have data to save space.
+
+- Performance:
+    Current grid system is copied every turn for the subjective state, which is wildly inefficient.
+    A different feature with observations will describe this solution, but it may depend on the new grid chunk system.
+
+### NEW FEATURE ###
+Observation System
+
+Represent subjective states as a collection of different observations given to an actor for different observation actions.
+
+-LocationObservation:
+    An object that describes the position of a particular entity.
+    The location can be fuzzy, depending on the degree of success the actor has on a perception roll (and the distance from the actor).
+
+    Granted from two different types of observation action:
+    - Passive perception: "plain sight" perception that is rolled every turn. Can only return a fuzzy location, unless
+        the action critically succeeds.
+    - Direct perception: can only be attempted when an existing LocationObservation is present. It improves the accuracy of
+        the passive perception if successful, nothing if failed, or worsens if critical fail.
+
+-VisualObservation:
+    An object that describes the information known about a particular entity.
+    Can represent a multitude of different attributes, but mainly everything related to the entities model.
+
+    Granted from two different types of observation action:
+    - Passive perception: "plain sight" perception that is rolled every turn. Can only provide plain sight or easily
+        inferred attributes. Examples of plain sight attributes:
+            - Active weapon
+            - Worn armor (non concealed)
+            - Roll results (success or fail) and stats involved (maybe not skills?) of actors in sight. (this will allow the AI to extrapolate the
+            relative value of stats without giving it as explicit information.
+
+    - Direct perception: provides information about advantages, disadvantages, HP and FP (since its easy to see
+    damage / exhaustion). Adv/dis will have a observation difficulty to make certain ones harder / impossible to observe.
+
+Storing observations:
+- Each being will have an entry in a manager that contains all the current observations made.
+- An ObservationSet will contain all the information an entity has on each other entity it can see.
+    - The set can be queried by target_id, or the subject of the observation.
+    - Each target will have a type-set of observations (key is the type of the observation type)
+
+Managing observations:
+- All observations will be granted by the ObserveAction.
+    - Passive observations will not specify a target while direct will.
+    - A passive observe action will be injected into the action-set of every actor that can currently perceive.
+    These observations generated will be used to craft the subjective state of the actor.
+    - Adding an observe action will require state to potentially be generated every action resolution.

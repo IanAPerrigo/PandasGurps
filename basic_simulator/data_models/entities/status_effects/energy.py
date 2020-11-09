@@ -39,8 +39,8 @@ class Starving(StatusEffect):
 
     def bootstrap(self, tick, time_scale):
         self.added_at_tick = tick
-        ticks_per_period = self.period_length_seconds // time_scale
-        self.next_relevant_tick = self.added_at_tick + ticks_per_period
+        #ticks_per_period = self.period_length_seconds // time_scale
+        self.next_relevant_tick = self.added_at_tick + self.period_length_seconds
 
         # In this case, active will be set to false externally when the conditions for hunger and
         # rest have been satisfied.
@@ -55,8 +55,8 @@ class Starving(StatusEffect):
         """
         # Starvation increases by one per period.
         self.level += 1
-        ticks_per_period = self.period_length_seconds // time_scale
-        self.next_relevant_tick = tick + ticks_per_period
+        #ticks_per_period = self.period_length_seconds // time_scale
+        self.next_relevant_tick = tick + self.period_length_seconds
 
 
 class Dehydrated(StatusEffect):
@@ -79,8 +79,8 @@ class Dehydrated(StatusEffect):
 
     def bootstrap(self, tick, time_scale):
         self.added_at_tick = tick
-        ticks_per_period = self.period_length_seconds // time_scale
-        self.next_relevant_tick = self.added_at_tick + ticks_per_period
+        #ticks_per_period = self.period_length_seconds // time_scale
+        self.next_relevant_tick = self.added_at_tick + self.period_length_seconds
 
         # In this case, active will be set to false externally when the conditions for hunger and
         # rest have been satisfied.
@@ -95,8 +95,8 @@ class Dehydrated(StatusEffect):
         """
         # Starvation increases by one per period.
         self.level += 1
-        ticks_per_period = self.period_length_seconds // time_scale
-        self.next_relevant_tick = tick + ticks_per_period
+        #ticks_per_period = self.period_length_seconds // time_scale
+        self.next_relevant_tick = tick + self.period_length_seconds
 
 
 class Resting(StatusEffect):

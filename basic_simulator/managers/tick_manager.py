@@ -1,4 +1,5 @@
 from managers.status_effect_manager import StatusEffectManager
+import time
 
 
 class TickManager:
@@ -9,6 +10,8 @@ class TickManager:
         self.tick_value = tick_value
         self.tick_rate = tick_rate
         self.status_effect_manager = status_effect_manager
+        self.start_time = time.perf_counter()
+        self.last_time = time.perf_counter()
 
     def tick(self):
         """
@@ -22,6 +25,13 @@ class TickManager:
 
         # Update the tick count.
         self.tick_value += self.tick_rate
+
+        current_time = time.perf_counter()
+        time_elapsed = current_time - self.last_time
+        total_time = current_time - self.start_time
+        self.last_time = current_time
+        tick_rate = 1 / time_elapsed if time_elapsed != 0 else 0
+        print("%d" % (tick_rate))
 
         # Tick all status effects
         self.status_effect_manager.tick_status_effects(self.tick_value, self.tick_rate)

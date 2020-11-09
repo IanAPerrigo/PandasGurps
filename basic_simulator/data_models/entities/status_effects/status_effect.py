@@ -23,6 +23,7 @@ class StatusEffect:
         self.added_at_tick = None
         self.removed_at_tick = None
         self.next_relevant_tick = None
+        self.last_relevant_tick = None
         self.active = False
 
     def bootstrap(self, tick, time_scale):
@@ -48,9 +49,8 @@ class MonotonicallyDecreasingStatusEffect(StatusEffect):
 
     def bootstrap(self, tick, time_scale):
         self.added_at_tick = tick
-        # Calculate ticks from [seconds / [seconds/tick]]. Drop fractional ticks.
-        ticks_per_period = self.period_length_seconds // time_scale
-        self.next_relevant_tick = self.added_at_tick + ticks_per_period
+        self.last_relevant_tick = self.added_at_tick
+        self.next_relevant_tick = self.added_at_tick + self.period_length_seconds
         self.active = True
 
     def update_tick(self, tick, time_scale):
@@ -60,7 +60,22 @@ class MonotonicallyDecreasingStatusEffect(StatusEffect):
         :param time_scale:
         :return:
         """
-        # Decrease the level and set the next update period.
-        self.level -= 1
-        ticks_per_period = self.period_length_seconds // time_scale
-        self.next_relevant_tick = tick + ticks_per_period
+        # Determine how many periods have passed (timescale could trigger multiple times).
+        ticks_elapsed = int((tick - self.last_relevant_tick) // self.period_length_seconds)
+        ticks_truncated = int((tick - self.last_relevant_tick) % self.period_length_seconds)
+
+        # Decrease the level by the number of ticks elapsed and set the next update period.
+        self.level -= ticks_elapsed
+        # Next period if the current time, minus the number of ticks since the last update should have been.
+        self.next_relevant_tick = (tick - ticks_truncated) + self.period_length_seconds
+        self.last_relevant_tick = (tick - ticks_truncated)
+
+
+class ScaleInvariantStatusEffect(StatusEffect):
+    """
+    A status effect that isnt tied to the amount of physical time passes (time scale is measured in seconds / tick).
+    A scale invariant status effect with period / trigger time of 5 means it will be 5 ticks from the last period
+    elapsed. If the game clock scale is extended (more seconds per tick), the status invariant will still be the same
+    amount of tick before and after. Regular status effects depend on the time elapsed; 5 ticks in the future is
+    actually 5 seconds in the future with a time scale of 1, but is 1 tick with a time scale of 5.
+    """

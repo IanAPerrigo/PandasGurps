@@ -178,7 +178,7 @@ class Components(containers.DeclarativeContainer):
             behaviors.human.provider
         ),
         ai_behavior_factory=providers.Factory(
-            behaviors.human.provider
+            behaviors.ai.provider
         ),
         being_fsm_factory=providers.Factory(
             fsms.being.provider

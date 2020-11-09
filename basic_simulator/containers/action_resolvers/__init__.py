@@ -8,6 +8,7 @@ from managers.action_resolvers.food import HarvestResolver, EatResolver
 from managers.action_resolvers.maneuvers.move import MoveManeuverResolver
 from managers.action_resolvers.maneuvers.move_attack import MoveAttackManeuverResolver
 from managers.action_resolvers.maneuvers.yield_turn import YieldTurnManeuverResolver
+from managers.action_resolvers.observation import ObservationResolver
 
 from data_models.actions import *
 from data_models.actions.maneuvers import *
@@ -53,6 +54,12 @@ class ActionResolvers(containers.DeclarativeContainer):
 
     eat_resolver = providers.Singleton(
         EatResolver,
+        simulation_manager=managers.simulation_manager,
+        logger=logger
+    )
+
+    observation_resolver = providers.Singleton(
+        ObservationResolver,
         simulation_manager=managers.simulation_manager,
         logger=logger
     )

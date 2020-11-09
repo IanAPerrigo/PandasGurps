@@ -7,6 +7,7 @@ from managers.turn_manager import TurnManager
 from managers.interaction_event_manager import InteractionEventManager
 from managers.tick_manager import TickManager
 from managers.status_effect_manager import StatusEffectManager
+from managers.observation_manager import ObservationManager
 
 
 class Managers(containers.DeclarativeContainer):
@@ -16,6 +17,10 @@ class Managers(containers.DeclarativeContainer):
     interaction_event_manager = providers.Singleton(
         InteractionEventManager,
         event_types=config.interaction.event_types
+    )
+
+    observation_manager = providers.Singleton(
+        ObservationManager
     )
 
     entity_model_manager = providers.Singleton(EntityModelManager)
@@ -40,6 +45,7 @@ class Managers(containers.DeclarativeContainer):
         grid_model=data_models.grid_model_objective,
         entity_component_manager=entity_component_manager,
         action_manager=action_manager,
+        observation_manager=observation_manager,
         grid_factory=data_models.grid_model_subjective.provider
     )
 
