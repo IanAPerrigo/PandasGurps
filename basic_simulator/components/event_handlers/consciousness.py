@@ -58,17 +58,17 @@ class ConsciousnessHandler(DirectObject):
         ht = actor.stats[StatType.HT.value]
         curr_hp = actor.stats[StatType.CURR_HP.value]
 
-        ht_roll = ContestRoll(ht)
-        ht_result = ht_roll.contest()
+        ht_roll = SuccessRoll(ht)
+        ht_result = ht_roll.roll()
 
         self.logger.info("Fell below 0 HP (HP = %d). Rolled HT to stay conscious: %s | [%d vs HT of %d]" %
                          (curr_hp, ht_result.value, ht_roll.last_result, ht))
 
-        if ht_result == ContestResults.Failure:
+        if ht_result == RollResult.Failure:
             self.apply_unconscious(actor)
-        elif ht_result == ContestResults.Critical_Failure:
+        elif ht_result == RollResult.Critical_Failure:
             self.apply_death(actor)
-        elif ht_result == ContestResults.Critical_Success:
+        elif ht_result == RollResult.Critical_Success:
             self.apply_hanging_on(actor)
         else:
             self.apply_hanging_on(actor)
@@ -77,19 +77,19 @@ class ConsciousnessHandler(DirectObject):
         ht = actor.stats[StatType.HT.value]
         curr_hp = actor.stats[StatType.CURR_HP.value]
 
-        ht_roll = ContestRoll(ht)
-        ht_result = ht_roll.contest()
+        ht_roll = SuccessRoll(ht)
+        ht_result = ht_roll.roll()
 
         self.logger.info("Fell below a negative multiple of HP (HP = %d). Rolled HT to stay conscious: %s | [%d vs HT of %d]" %
                          (curr_hp, ht_result.value, ht_roll.last_result, ht))
 
         # TODO: clear out old status like if unconscious -> death, remove unconscious.
 
-        if ht_result == ContestResults.Failure:
+        if ht_result == RollResult.Failure:
             self.apply_death(actor) # TODO: Technically dying, but for simplicity.
-        elif ht_result == ContestResults.Critical_Failure:
+        elif ht_result == RollResult.Critical_Failure:
             self.apply_death(actor)
-        elif ht_result == ContestResults.Critical_Success:
+        elif ht_result == RollResult.Critical_Success:
             self.apply_hanging_on(actor)
         else:
             if not actor.status_effects.is_affected_by(Unconscious):

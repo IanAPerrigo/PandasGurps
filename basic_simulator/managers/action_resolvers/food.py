@@ -89,19 +89,19 @@ class HarvestResolver(ActionResolver):
         #     # TODO: stub
         else:
             # No special modifiers to the target. A disadvantaged harvest (target can fight back potentially)
-            hit_roll = ContestRoll(attacker_hit_score)
-            hit_result = hit_roll.contest()
+            hit_roll = SuccessRoll(attacker_hit_score)
+            hit_result = hit_roll.roll()
             self.logger.info("Attacker rolling to hit (3d6): [%s] | %d" % (hit_result.value, hit_roll.last_result))
 
-            if hit_result == ContestResults.Failure or hit_result == ContestResults.Critical_Failure:
+            if hit_result == RollResult.Failure or hit_result == RollResult.Critical_Failure:
                 did_succeed = False
             else:
-                defense_roll = ContestRoll(defender_defense_score)
-                defense_result = defense_roll.contest()
+                defense_roll = SuccessRoll(defender_defense_score)
+                defense_result = defense_roll.roll()
 
                 self.logger.info(
                     "Defender rolling to defend (3d6): [%s] | %d" % (defense_result.value, defense_roll.last_result))
-                if defense_result == ContestResults.Critical_Success or defense_result == ContestResults.Success:
+                if defense_result == RollResult.Critical_Success or defense_result == RollResult.Success:
                     # Attack misses.
                     did_succeed = False
                 else:

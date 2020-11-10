@@ -402,3 +402,5 @@ Managing observations:
     - A passive observe action will be injected into the action-set of every actor that can currently perceive.
     These observations generated will be used to craft the subjective state of the actor.
     - Adding an observe action will require state to potentially be generated every action resolution.
+
+Location fuzziness:

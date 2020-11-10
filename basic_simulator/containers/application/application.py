@@ -3,6 +3,7 @@ from direct.directnotify.DirectNotify import DirectNotify
 
 from containers.data_models import DataModels
 from containers.behaviors import Behaviors
+from containers.utility import Rolls
 from containers.components import Components, CoreComponents, DirectObjects, Fsm, Visual
 from containers.managers import Managers
 from containers.action_resolvers import ActionResolvers, ManeuverResolvers
@@ -31,10 +32,17 @@ class Application(containers.DeclarativeContainer):
         data_models=data_models
     )
 
+    rolls = providers.Container(
+        Rolls,
+        #config=config.rolls
+        managers=managers
+    )
+
     action_resolvers = providers.Container(
         ActionResolvers,
         config=config.action_resolvers,
-        managers=managers
+        managers=managers,
+        rolls=rolls
     )
 
     maneuver_resolvers = providers.Container(

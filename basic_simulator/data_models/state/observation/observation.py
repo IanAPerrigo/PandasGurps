@@ -44,7 +44,7 @@ class ObservationSet:
         return self._store.keys()
 
     def get(self, target_id: UUID, observation_type: type) -> list:
-        return self._store[target_id][observation_type]
+        return self._store[target_id].get(observation_type)
 
     def remove(self, target_id: UUID, observation: Observation):
         self._store[target_id][type(observation)].remove(observation)

@@ -8,6 +8,7 @@ from data_models.entities.being import Being
 from events.component.actors import RefreshStats
 from events import Event
 from utility.rolling import *
+from utility.rolling.advanced import RollVersus, RollResult
 
 
 class MeleeAttackResolver(ActionResolver):
@@ -71,26 +72,28 @@ class MeleeAttackResolver(ActionResolver):
 
         # TODO: Query module for different bonuses
 
-        hit_roll = ContestRoll(attacker_hit_score)
-        hit_result = hit_roll.contest()
+        # TODO: rolling to hit will depend on skills, and the weapon used
+        # TODO: roll versus will require factory
+        hit_roll = SuccessRoll(attacker_hit_score)
+        hit_result = hit_roll.roll()
         self.logger.info("Attacker rolling to hit (3d6): [%s] | %d" % (hit_result.value, hit_roll.last_result))
 
-        if hit_result == ContestResults.Failure:
+        if hit_result == RollResult.Failure:
             """ TODO: Attack misses. event? """
-        elif hit_result == ContestResults.Critical_Failure:
+        elif hit_result == RollResult.Critical_Failure:
             """ TODO: critical miss table """
-        elif hit_result == ContestResults.Critical_Success:
+        elif hit_result == RollResult.Critical_Success:
             """ TODO: perform critical hit """
         else:
-            defense_roll = ContestRoll(defender_defense_score)
-            defense_result = defense_roll.contest()
+            defense_roll = SuccessRoll(defender_defense_score)
+            defense_result = defense_roll.roll()
 
             self.logger.info("Defender rolling to defend (3d6): [%s] | %d" % (defense_result.value, defense_roll.last_result))
-            if defense_result == ContestResults.Critical_Success:
+            if defense_result == RollResult.Critical_Success:
                 # TODO: cause attacker to critical miss
                 action.status = ActionStatus.RESOLVED
                 return
-            elif defense_result == ContestResults.Success:
+            elif defense_result == RollResult.Success:
                 # Attack misses.
                 action.status = ActionStatus.RESOLVED
                 return

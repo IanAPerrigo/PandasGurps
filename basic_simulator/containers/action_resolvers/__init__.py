@@ -21,6 +21,7 @@ def stub_get_resolver():
 class ActionResolvers(containers.DeclarativeContainer):
     config = providers.Configuration()
     managers = providers.DependenciesContainer()
+    rolls = providers.DependenciesContainer()
 
     logger = providers.Singleton(
         DirectNotify
@@ -61,6 +62,7 @@ class ActionResolvers(containers.DeclarativeContainer):
     observation_resolver = providers.Singleton(
         ObservationResolver,
         simulation_manager=managers.simulation_manager,
+        roll_versus_factory=rolls.roll_versus.provider,
         logger=logger
     )
 
