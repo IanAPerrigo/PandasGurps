@@ -7,7 +7,7 @@ class Food(Entity):
     """
     Basic form of sustenance.
     """
-    def __init__(self, entity_id: UUID, sustenance_value=1):
+    def __init__(self, entity_id, sustenance_value=1):
         super(Food, self).__init__(entity_id)
 
         # TODO: add an "edible" status effect

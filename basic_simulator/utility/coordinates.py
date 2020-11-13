@@ -7,8 +7,12 @@ def cube_to_offset(cubic_coord: np.array):
     return np.array((col, row))
 
 
-def cubic_manhattan(c1: np.ndarray, c2: np.ndarray, axis=0):
+def slow_cubic_manhattan(c1: np.ndarray, c2: np.ndarray, axis=0):
     return np.linalg.norm(c2 - c1, ord=1, axis=axis) / 2
+
+
+def cubic_manhattan(c1: np.ndarray, c2: np.ndarray, axis=0):
+    return np.absolute(c2 - c1).sum(axis=axis) / 2
 
 
 def offset_to_cube(offset_coord):

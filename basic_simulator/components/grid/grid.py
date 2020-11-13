@@ -34,7 +34,7 @@ class GridComponent(DirectObject, PandaNode):
         for change_name, target, location in self.data_model.changes_delta:
             if change_name == "insert":
                 # TODO maybe migrate this to a dictionary lookup later for performance
-                offset_loc = cube_to_offset(location)
+                offset_loc = location
                 loc = self.path.find("location.%s.%s" % (offset_loc[0], offset_loc[1]))
                 component = self.entity_component_manager.get(target)
                 if component is None:

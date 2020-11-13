@@ -15,7 +15,6 @@ from components.main import GurpsMain
 
 from managers.simulation_manager import SimulationStateManager
 from data_models.actions import *
-from data_models.actions.observation import *
 from data_models.actions.maneuvers import *
 
 
@@ -115,6 +114,7 @@ resolvers_for_type = {
     EatAction: application.action_resolvers.eat_resolver,
     ObservationAction: application.action_resolvers.observation_resolver,
 
+    PassiveObservationManeuver: application.maneuver_resolvers.passive_observation_resolver,
     MoveManeuver: application.maneuver_resolvers.movement_resolver,
     MoveAttackManeuver: application.maneuver_resolvers.move_attack_resolver,
     YieldTurnManeuver: application.maneuver_resolvers.yield_turn_resolver,

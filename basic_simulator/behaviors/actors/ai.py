@@ -14,7 +14,7 @@ class AiBehavior(Behavior):
         self.entity_id = entity_id
         self.keys = None # TODO: should be a dep
 
-        self.done = False
+        self.done = True
 
     def act(self, state: SimulationState):
         if self.done:

@@ -18,7 +18,7 @@ class ContestManager:
     def __init__(self, simulation_manager: SimulationStateManager):
         self.simulation_manager = simulation_manager
 
-    def contest(self, subject_id: UUID, target_id: UUID,
+    def contest(self, subject_id, target_id,
                 subject_contest_type, target_contest_type,
                 subject_modifiers, target_modifiers,
                 allow_defaults=False):

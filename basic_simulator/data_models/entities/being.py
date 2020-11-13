@@ -12,7 +12,7 @@ class Being(Entity):
     """
     Base class for any entity with stats.
     """
-    def __init__(self, entity_id: UUID, base_stats: StatSet, modified_stats: ModifiedStatSet, status_effects: StatusSet = None):
+    def __init__(self, entity_id, base_stats: StatSet, modified_stats: ModifiedStatSet, status_effects: StatusSet = None):
         super(Being, self).__init__(entity_id=entity_id, status_effects=status_effects)
         self.base_stats = base_stats
         self.stats = modified_stats

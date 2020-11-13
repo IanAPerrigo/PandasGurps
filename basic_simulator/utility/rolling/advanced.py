@@ -6,7 +6,7 @@ from managers.entity_manager import BeingModelManager
 
 
 class RollVersus(SuccessRoll):
-    def __init__(self, being_id: UUID, versus, modifiers=None, being_model_manager: BeingModelManager = None):
+    def __init__(self, being_id, versus, modifiers=None, being_model_manager: BeingModelManager = None):
         self.being_model_manager = being_model_manager
         self.being_id = being_id
 

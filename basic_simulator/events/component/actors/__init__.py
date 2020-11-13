@@ -6,7 +6,7 @@ from direct.showbase.DirectObject import DirectObject
 
 class RefreshStats:
     @staticmethod
-    def signal(id: uuid4, *args):
+    def signal(id, *args):
         """
         Used to signal a component that uses stats to re-draw.
         :return:
@@ -14,9 +14,9 @@ class RefreshStats:
         Event.signal("refresh_stats_%s" % id, *args)
 
     @staticmethod
-    def register(id: uuid4, source: DirectObject, callback):
+    def register(id, source: DirectObject, callback):
         Event.register("refresh_stats_%s" % id, source, callback)
 
     @staticmethod
-    def unregister(id: uuid4, source: DirectObject):
+    def unregister(id, source: DirectObject):
         Event.unregister("refresh_stats_%s" % id, source)

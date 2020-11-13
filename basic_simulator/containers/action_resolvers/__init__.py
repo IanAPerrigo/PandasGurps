@@ -6,6 +6,7 @@ from managers.action_resolvers.movement import MovementResolver
 from managers.action_resolvers.combat import MeleeAttackResolver
 from managers.action_resolvers.food import HarvestResolver, EatResolver
 from managers.action_resolvers.maneuvers.move import MoveManeuverResolver
+from managers.action_resolvers.maneuvers.passive_observation import PassiveObservationManeuverResolver
 from managers.action_resolvers.maneuvers.move_attack import MoveAttackManeuverResolver
 from managers.action_resolvers.maneuvers.yield_turn import YieldTurnManeuverResolver
 from managers.action_resolvers.observation import ObservationResolver
@@ -73,6 +74,13 @@ class ManeuverResolvers(containers.DeclarativeContainer):
     action_resolvers = providers.DependenciesContainer()
     logger = providers.Singleton(
         DirectNotify
+    )
+
+    passive_observation_resolver = providers.Singleton(
+        PassiveObservationManeuverResolver,
+        simulation_manager=managers.simulation_manager,
+        logger=logger,
+        generic_resolver=action_resolvers.generic_action_resolver
     )
 
     movement_resolver = providers.Singleton(

@@ -365,12 +365,12 @@ Observation System
 
 Represent subjective states as a collection of different observations given to an actor for different observation actions.
 
--LocationObservation:
+# DONE #-LocationObservation:
     An object that describes the position of a particular entity.
     The location can be fuzzy, depending on the degree of success the actor has on a perception roll (and the distance from the actor).
 
     Granted from two different types of observation action:
-    - Passive perception: "plain sight" perception that is rolled every turn. Can only return a fuzzy location, unless
+    # DONE # - Passive perception: "plain sight" perception that is rolled every turn. Can only return a fuzzy location, unless
         the action critically succeeds.
     - Direct perception: can only be attempted when an existing LocationObservation is present. It improves the accuracy of
         the passive perception if successful, nothing if failed, or worsens if critical fail.
@@ -403,4 +403,12 @@ Managing observations:
     These observations generated will be used to craft the subjective state of the actor.
     - Adding an observe action will require state to potentially be generated every action resolution.
 
-Location fuzziness:
+
+
+### Performance ###
+Fixed lots of calls to multivariate_normal (bogged down the speed big time). Now it is if it wasnt there.
+
+Lots of calls to cubic_to_offset, meaning there is lots of translation that may not be needed.
+    - To solve, maybe make grid_model work exclusively with offset coordinates. Will have to investigate.
+    - Deep copy also seeing lots of use. Maybe remove it from the grid (since get_contents may not even matter if the
+    refs they pass back are the real).

@@ -8,7 +8,8 @@ from managers.interaction_event_manager import InteractionEventManager
 from managers.tick_manager import TickManager
 
 from data_models.actions import ActionStatus
-from data_models.actions.maneuvers import YieldTurnManeuver
+from data_models.actions.maneuvers import YieldTurnManeuver, PassiveObservationManeuver
+from data_models.actions.observation import ObservationAction
 from data_models.entities.status_effects.consciousness import *
 from events import Event
 
@@ -89,11 +90,21 @@ class TurnManagementFSM(FSM):
                 self.demand("NextTurn")
                 return
 
-        # Generate a baseline subjective state.
-        self.simulation_manager.generate_subjective_state_for(curr_actor)
-
         # Reset the list of actions for the current actor.
         self.simulation_manager.action_manager.reset_actions_for(curr_actor)
+
+        # Clear the observations the actor had cached.
+        self.simulation_manager.observation_manager.clear(curr_actor)
+
+        # Grant a passive observation to start the turn.
+        passive_observation = PassiveObservationManeuver([ObservationAction()])
+        passive_observation.status = ActionStatus.READY
+        passive_observation.set_actor(curr_actor)
+        self.simulation_manager.action_manager.submit_maneuver(curr_actor, passive_observation)
+        self._step_complete()
+
+        # Generate a baseline subjective state.
+        self.simulation_manager.generate_subjective_state_for(curr_actor)
 
         # Yield control to the FSM.
         fsm = self.entity_fsm_manager[curr_actor]
@@ -178,5 +189,6 @@ class TurnManagementFSM(FSM):
 
         # Issue a grid update only if an action was processed.
         if processed_any_action:
-            Event.signal("notify_grid_update")
+            #Event.signal("notify_grid_update")
+            pass
             # TODO: issue other events (perhaps depending on the effects of the actions)

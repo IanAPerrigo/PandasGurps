@@ -6,7 +6,7 @@ from managers.observation_manager import ObservationManager
 from data_models.grid import GridModel
 from data_models.state.simulation_state import SubjectiveSimulationState
 from data_models.state.observation.location_observation import LocationObservation
-from utility.coordinates import cubic_manhattan
+from utility.coordinates import cubic_manhattan, cube_to_offset
 
 
 class SimulationStateManager:
@@ -26,7 +26,7 @@ class SimulationStateManager:
         self.action_manager = action_manager
         self.entity_states = {}
 
-    def amend_subjective_state(self, entity_id: UUID):
+    def amend_subjective_state(self, entity_id):
         """
         Given a new observation, amend the existing state to include the new information.
         :param entity_id:
@@ -35,7 +35,7 @@ class SimulationStateManager:
         """
         pass
 
-    def _generate_new_state_for_entity(self, entity_id: UUID):
+    def _generate_new_state_for_entity(self, entity_id):
         subjective_grid = self._grid_factory()
         actors = {}
         self.entity_states[entity_id] = SubjectiveSimulationState(subjective_grid, actors)
@@ -67,6 +67,8 @@ class SimulationStateManager:
                 loc_ob = location_observations[0]
                 loc_ob.collapse_observation()
                 entity_loc = loc_ob.collapsed_value
+                entity_loc = cube_to_offset(entity_loc)
+
                 subjective_state.grid.insert(entity_loc, loc_ob.target_id)
 
 

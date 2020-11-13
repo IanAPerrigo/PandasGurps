@@ -10,7 +10,7 @@ class StatusEffectManager:
         # UUID to list mapping of
         self.new_status_effects = {}
 
-    def add_status_effect_to_entity(self, entity_id: UUID, status_effect: StatusEffect):
+    def add_status_effect_to_entity(self, entity_id, status_effect: StatusEffect):
         if entity_id not in self.new_status_effects:
             self.new_status_effects[entity_id] = list()
 
@@ -18,7 +18,7 @@ class StatusEffectManager:
         entity.add_status_effect(status_effect)
         self.new_status_effects[entity_id].append(status_effect)
 
-    def remove_status_effect_from_entity(self, entity_id: UUID, status_effect: StatusEffect):
+    def remove_status_effect_from_entity(self, entity_id, status_effect: StatusEffect):
         entity = self.simulation_manager.entity_model_manager.get(entity_id)
         entity.remove_status_effect(status_effect)
         if entity_id in self.new_status_effects and status_effect in self.new_status_effects[entity_id]:

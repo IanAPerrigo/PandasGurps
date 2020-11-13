@@ -5,7 +5,7 @@ from .status_effects import StatusEffect
 
 
 class Entity:
-    def __init__(self, entity_id: UUID, status_effects: StatusSet = None):
+    def __init__(self, entity_id, status_effects: StatusSet = None):
         self.entity_id = entity_id
         self.status_effects = status_effects if status_effects is not None else StatusSet()
 

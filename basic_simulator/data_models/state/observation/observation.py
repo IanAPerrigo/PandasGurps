@@ -1,4 +1,5 @@
 from uuid import UUID
+from typing import List
 
 
 class Observation:
@@ -11,13 +12,13 @@ class Observation:
         Yields information on the model information of the target of the observation.
 
     """
-    def __init__(self, subject_id: UUID, target_id: UUID):
+    def __init__(self, subject_id, target_id):
         self.subject_id = subject_id
         self.target_id = target_id
 
 
 class FuzzyObservation(Observation):
-    def __init__(self, subject_id: UUID, target_id: UUID):
+    def __init__(self, subject_id, target_id):
         super(FuzzyObservation, self).__init__(subject_id=subject_id, target_id=target_id)
 
         # The collapsed value is the value of the observation AFTER it was used to generate a subjective state.
@@ -43,14 +44,14 @@ class ObservationSet:
     def keys(self):
         return self._store.keys()
 
-    def get(self, target_id: UUID, observation_type: type) -> list:
+    def get(self, target_id, observation_type: type) -> list:
         return self._store[target_id].get(observation_type)
 
-    def remove(self, target_id: UUID, observation: Observation):
+    def remove(self, target_id, observation: Observation):
         self._store[target_id][type(observation)].remove(observation)
 
-    def remove_all(self, target_id: UUID, observation_type: type):
+    def remove_all(self, target_id, observation_type: type):
         self._store[target_id][observation_type] = list()
 
-    def clear(self, target_id: UUID):
+    def clear(self, target_id):
         self._store[target_id] = {}
