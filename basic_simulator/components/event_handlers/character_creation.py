@@ -14,6 +14,7 @@ from data_models.entities.being import Being
 from data_models.entities.stats import StatType, StatSet, SecondaryStats, PrimaryStats, get_derived
 from data_models.entities.modifiers import ModifiedStatSet
 from data_models.entities.status_effects.energy import *
+from utility.coordinates import *
 
 
 class CharacterCreator(DirectObject):
@@ -81,8 +82,8 @@ class CharacterCreator(DirectObject):
         if loc is None:
             # Generate a random location.
             grid = self.simulation_manager.grid_model
-            loc = (random.randint(0, grid.x_size-1), random.randint(0, grid.y_size-1))
-            grid.insert(loc, actor.id)
+            loc = offset_to_cube(np.array((random.randint(-1, 1), random.randint(-1, 1))))
+            grid.insert_absolute(loc, actor.id)
         else:
             self.simulation_manager.grid_model.insert(loc, actor.id)
     # TODO: create the genetics stat / adv / dis generator here.

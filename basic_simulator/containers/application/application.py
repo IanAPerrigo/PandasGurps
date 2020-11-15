@@ -6,6 +6,7 @@ from containers.behaviors import Behaviors
 from containers.utility import Rolls
 from containers.components import Components, CoreComponents, DirectObjects, Fsm, Visual
 from containers.managers import Managers
+from containers.repositories import Repositories
 from containers.action_resolvers import ActionResolvers, ManeuverResolvers
 from containers.gui import GUI
 
@@ -16,9 +17,15 @@ class Application(containers.DeclarativeContainer):
         DirectNotify
     )
 
+    repositories = providers.Container(
+        Repositories,
+        config=config.repositories
+    )
+
     data_models = providers.Container(
         DataModels,
-        config=config.data_models
+        config=config.data_models,
+        repositories=repositories
     )
 
     behaviors = providers.Container(

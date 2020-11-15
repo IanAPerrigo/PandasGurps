@@ -48,10 +48,14 @@ def run_app(
 application = app_containers.Application()
 
 application.config.from_dict({
+    "repositories" : {
+        'connection_string': 'sqlite:///:memory:',
+        'echo': True
+    },
     "data_models": {
         'grid': {
-            "x_size": 10,
-            "y_size": 10
+            "chunk_radius": 5,
+            "procedural": True
         },
 
     },
@@ -85,9 +89,9 @@ application.config.from_dict({
         "camera": {
             'background_color': (.2, .2, .2, 1),
             'fov': 75,
-            'x_offset': 12,
-            'z_offset': -6,
-            'scroll': -20
+            'x_offset': 5,
+            'z_offset': 0,
+            'scroll': -50
         },
         'lighting': {
             'ambient_color': (1, 1, 1, 1),

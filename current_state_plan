@@ -326,27 +326,7 @@ further optimizations required to lower the memory footprint of the grid system
     Attempting to access a certain area outside of loaded cache bounds would cause a miss, and result in a chunk load into memory.
 
 
-
-
-
-
-
-
-### PERFORMANCE NOTES ###
-Did a simple test with a behavior that only yields when it is asked to act.
-num actors | t/s
-1 | 2100
-2 | 950
-3 | 560
-4 | 370
-5 | 275
-
-First glance is ~ 1/n for n actors.
-Further analysis shows that there is a constant cost in SINGLE ACTOR performance per turn.
-This is due to the subjective state generation (the grid model is copied EVERY turn)
-A better way would be to use the objective grid, and to manage entities in a subjective grid through observations.
-
-### NEW FEATURE ###
+# DONE #
 Better grid management.
 
 Goals:
@@ -402,13 +382,3 @@ Managing observations:
     - A passive observe action will be injected into the action-set of every actor that can currently perceive.
     These observations generated will be used to craft the subjective state of the actor.
     - Adding an observe action will require state to potentially be generated every action resolution.
-
-
-
-### Performance ###
-Fixed lots of calls to multivariate_normal (bogged down the speed big time). Now it is if it wasnt there.
-
-Lots of calls to cubic_to_offset, meaning there is lots of translation that may not be needed.
-    - To solve, maybe make grid_model work exclusively with offset coordinates. Will have to investigate.
-    - Deep copy also seeing lots of use. Maybe remove it from the grid (since get_contents may not even matter if the
-    refs they pass back are the real).

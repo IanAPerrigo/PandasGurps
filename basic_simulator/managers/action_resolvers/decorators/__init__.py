@@ -110,10 +110,10 @@ def required_target(ignore_self=True, explicit=True, selection_type: type = None
         action.reason = "No entities left to randomly select from"
         return
     else:
-        # If there is a stipulation of selection type, pull down the data models to verify their type.
+        # If there is a stipulation of selection type, pull down the data data_models to verify their type.
         if selection_type is not None:
             dst_entities = map(lambda e_id: self.simulation_manager.entity_model_manager[e_id], dst_entities_by_id)
-            # Filter only models with the selection type.
+            # Filter only data_models with the selection type.
             dst_entities_by_id = list(
                 map(lambda e: e.entity_id,
                     filter(lambda e: isinstance(e, selection_type), dst_entities)

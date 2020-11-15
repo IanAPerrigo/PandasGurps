@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
 from uuid import uuid4, uuid1
 
-from data_models.grid import GridModel
+from data_models.grid import DatabaseBackedGridModel, EphemeralGridModel
 from data_models.entities.being import Being
 
 id_num = 0
@@ -16,20 +16,20 @@ def get_id():
 
 class DataModels(containers.DeclarativeContainer):
     config = providers.Configuration()
+    repositories = providers.DependenciesContainer()
 
     #uuid = providers.Factory(uuid1)
     uuid = providers.Callable(get_id)
 
     grid_model_objective = providers.Singleton(
-        GridModel,
-        x_size=config.grid.x_size,
-        y_size=config.grid.y_size
+        DatabaseBackedGridModel,
+        chunk_radius=config.grid.chunk_radius,
+        procedural=config.grid.procedural,
+        db=repositories.db
     )
 
     grid_model_subjective = providers.Factory(
-        GridModel,
-        x_size=config.grid.x_size,
-        y_size=config.grid.y_size
+        EphemeralGridModel
     )
 
     being_model = providers.Factory(

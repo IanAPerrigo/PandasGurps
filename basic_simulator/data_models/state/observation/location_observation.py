@@ -26,7 +26,7 @@ class LocationObservation(FuzzyObservation):
     def get_sample():
         sample = next(LocationObservation.__sample_iter, None)
         if sample is None:
-            LocationObservation.__samples = np.random.multivariate_normal(np.array([0,0]), np.identity(2), size=10000)
+            LocationObservation.__samples = np.random.multivariate_normal(np.array([0,0,0]), np.identity(3), size=10000)
             LocationObservation.__sample_iter = iter(LocationObservation.__samples)
             sample = next(LocationObservation.__sample_iter)
         return sample

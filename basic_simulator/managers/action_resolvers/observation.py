@@ -61,6 +61,7 @@ class ObservationResolver(ActionResolver):
         subject_id = action.actor
         target_id = action.target_id
         existing_obsvs = self.simulation_manager.observation_manager.get_observations(subject_id)
+        chunk, offset = self.simulation_manager.grid_model.get_chunk_offset(subject_id)
 
         # Determine which type of observation is being done, Passive or Direct.
         if target_id is not None:
@@ -93,27 +94,9 @@ class ObservationResolver(ActionResolver):
             loc_obsv = LocationObservation(center=center, noise=noise, subject_id=subject_id, target_id=target_id)
             self.simulation_manager.observation_manager.add_observation(loc_obsv)
         else:
-            # TODO: this will only get the entities in a certain radius in the future
-            #  to prevent loading more chunks than needed, along with not involving every entity on the grid.
-            # TODO: ALSO NOTE: this code could be in the grid model, since other classes could benefit from the
-            #   distance calculations.
-            all_entities_dict = self.simulation_manager.grid_model.get_contents()
-            center = np.reshape(all_entities_dict.get(subject_id), (1, 3))
-            all_entities_dict.pop(subject_id)
+            entity_distances = self.simulation_manager.grid_model.get_entities_in_radius(chunk, offset, 10)
 
-            all_entities = list(all_entities_dict.items())
-            all_locs = all_entities_dict.values()
-
-            # Build the entity location matrix out.
-            entity_location_matrix = reduce(lambda l0, l1: np.concatenate([l0, l1]), all_locs)
-
-            num_entities = len(all_entities)
-            entity_location_matrix = np.reshape(entity_location_matrix, (num_entities, 3))
-            center_matrix = np.repeat(center, num_entities, axis=0)
-            distances = cubic_manhattan(center_matrix, entity_location_matrix, axis=1)
-            entity_distances = zip(all_entities, distances)
-
-            for (tid, loc), d in entity_distances:
+            for tid, d, a_loc in entity_distances:
                 noise, roll_result = self._get_noise_for(subject_id, tid, d)
                 if noise is None:
                     continue
@@ -121,25 +104,12 @@ class ObservationResolver(ActionResolver):
                 # If an observation already exists, update it.
                 if tid in existing_obsvs.keys():
                     existing_obsvs.remove_all(tid, LocationObservation)
-                loc_obsv = LocationObservation(center=loc, noise=noise, subject_id=subject_id, target_id=tid)
+                loc_obsv = LocationObservation(center=a_loc, noise=noise, subject_id=subject_id, target_id=tid)
                 self.simulation_manager.observation_manager.add_observation(loc_obsv)
-
-        # Validate that number of hexes moved is less than the basic speed of the actor.
-        # actor_model = self.simulation_manager.being_model_manager.get(actor)
-        # curr_bm = actor_model.stats[StatType.CURR_BM]
-        # # TODO: replace hardcoded hex movement cost.
-        # hex_cost = 1
-        # if curr_bm - hex_cost < 0:
-        #     action.status = ActionStatus.FAILED
-        #     return
-        #
-        # actor_model.base_stats[StatType.CURR_BM] -= hex_cost
 
         # TODO: manage movement challenges (terrain difficulty, walls, etc)
         # TODO: in order for this to work, the move resolver must know how much speed it remaining for a given turn.
         #   this also go for other actions, they must know the game state so they can determine whether or not to modify
         #   the game state.
 
-        #vec = action.get_vector()
-        #self.simulation_manager.grid_model.move(action.actor, np.array(vec))
         action.status = ActionStatus.RESOLVED
