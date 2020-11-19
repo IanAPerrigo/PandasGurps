@@ -4,6 +4,7 @@ from managers import SimulationStateManager
 from managers.action_resolvers.generic import ActionResolver
 from managers.action_resolvers.decorators import require_consciousness
 from data_models.actions.action import ActionStatus
+from data_models.actions.movement import MovementAction, MovementType
 from data_models.entities.stats import StatType
 
 
@@ -17,16 +18,17 @@ class MovementResolver(ActionResolver):
         self.logger = logger
 
     @require_consciousness
-    def resolve(self, action):
+    def resolve(self, action: MovementAction):
         actor = action.actor
 
         # Validate that number of hexes moved is less than the basic speed of the actor.
         actor_model = self.simulation_manager.being_model_manager.get(actor)
         curr_bm = actor_model.stats[StatType.CURR_BM]
         # TODO: replace hardcoded hex movement cost.
-        hex_cost = 1
+        hex_cost = 1 if action.direction != MovementType.NONE else 0
         if curr_bm - hex_cost < 0:
             action.status = ActionStatus.FAILED
+            action.reason = "No more basic move remaining, cannot move."
             return
 
         actor_model.base_stats[StatType.CURR_BM] -= hex_cost

@@ -35,7 +35,7 @@ def run_app(
     lighting.setup()
 
     # GUI initialization.
-    show_base.disableMouse()
+    #show_base.disableMouse()
     kivy_app.run()
 
     # Request the main FSM to take over.
@@ -48,7 +48,7 @@ def run_app(
 application = app_containers.Application()
 
 application.config.from_dict({
-    "repositories" : {
+    "repositories": {
         'connection_string': 'sqlite:///:memory:',
         'echo': True
     },
@@ -91,7 +91,7 @@ application.config.from_dict({
             'fov': 75,
             'x_offset': 5,
             'z_offset': 0,
-            'scroll': -50
+            'scroll': -30
         },
         'lighting': {
             'ambient_color': (1, 1, 1, 1),

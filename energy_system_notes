@@ -1,0 +1,92 @@
+Energy system:
+
+- Create a system to analyze the amount of FP used over time.
+    - Sustained use of movement, combat or other actions deemed costly.
+- Add "Harvest" and "Eat" actions.
+    - Harvest: if target is disabled (unconscious, dead, pinned).
+    Target can be an entity with the edible status effect.
+    Automatic hit, deal Swing (CUT) damage and gain 1 meal's worth of food.
+    When an entity receives the non-existent status, it can no longer be harvested.
+    The idea is to have lower HP entities count for less food (weaker and generally smaller)
+    Harvested food will be dropped on the floor. An general action to pick up will be added with inventory
+    - Eat: consume food nearby or in a container you own
+    Add status effect "Eaten N" where N is the number of meals eaten
+- Missing a meal:
+    A meal is missed if after 1/3 of the day, the actor doesnt have "Eaten 1"
+    After a meal period has elapsed, remove a level of Eaten from the active eaten status. If none exists, gain a
+    Starvation stack.
+- Starvation:
+    Starvation requires a whole day of rest + 3 whole meals.
+    (might be extreme, here is a test case)
+        Rest being interrupted can easily cause death, since anything can ust come along even if the actor ate and was resting.
+        Might consider not having "all or nothing" regeneration (as per the rules).
+        Consideration: If the actor can eat 3 meals in a day, each meal with the 'rest' buff, then the starvation is gone.
+- Dehydration:
+    - 2 quarts per day required
+        - 8 drinks of water a day
+    - Lose 1 FP every 8 hours
+        - if less than 1 quart was drank in a day, lose an extra 1 FP and 1 HP
+            - Represented by "dehydration N" N being the number of periods of missed water.
+            - "Severe dehydration N" is the number of days drinking less than a quart of water.
+        - all dehydration debuffs can be removed by ample rest and normal water intake.
+- Resting:
+    Resting buff is awarded when strenuous activity is avoided for a period of time.
+    - Strenuous movement: > 40% maximum movement.
+    - Any combat
+    - Lifting Extra-Heavy loads (overexertion)
+    - Dehydration or starvation nullifies the effects of rest.
+    - Rest periods and status-effects
+        - Every 10m of rest: +1 FP or +2 with food
+    - Sleep:
+        - 1 FP per hour uninterrupted
+        - Required in last 24 hours otherwise incur penalties (the only reason to do it, since rest is more efficient)
+
+Breakdown (large feature):
+
+
+# DONE # - Add harvest and eat first, and the status effects given from eating.
+- Next, add non-actor entities that count as food (maybe a status effect "edible")
+    # DONE # - Also add meal entities that will eventually be able to be picked up.
+- Next add a simple 'tick' event system where each turn the tick counter is incremented and an event is sent out.
+    A note about this, statuses not tied directly to tick, a status_update event will be called from the tick event
+    to keep order of operations in case some priority needs to arise. The status_update will handle registration of
+    status updates on particular tick numbers.
+    - Further expand on this.
+        The status effect object can be broken into a few types:
+        # DONE # Countdown status effects: effects that expire after a period of time. This would be like shock, which ticks down over time.
+        # DONE # Eternal status effects: always present like fed, hydrated, rest, etc.
+            # DONE # Also: periodically updated
+        # DONE # Triggered status effects: effects removed by certain circumstances
+        TODO: more?
+    # DONE # - Handling keeping track of when to update (or potentially remove) status effects.
+        A generic way of updating a status effect from one place, without knowing the particulars of each status effect.
+        This means, some level of self management is required, but the different classes of statuses are treated as such
+        in a manager.
+
+        Add an update_tick function to the status effect class.
+        The update_tick function is only called when needed, and using a "next_relevant_tick" field in the status,
+        excessive updates can be ignored.
+        A flag controlling whether a status should be cleaned up will be the signal of if it should be removed.
+
+        e.g. ShockStatus:
+        # Generic fields from StatusEffect
+        tick_added = 0
+        tick_removed = None
+        next_relevant_tick = 1 # Every turn, shock has a modifier reduction.
+        active = True
+
+        update_tick(current_tick, time_scale)
+        # Update shock modifier
+        # check if status has expired
+        # if it has expired
+            active = False
+            next_relevant_tick = None
+            # tick_removed will be set by the manager
+        # if it didnt expire
+            next_relevant_tick += time_scale # Because there is a change every tick (regardless of scale)
+
+        - Now the manager either cleans up the status if it was deactivated or moves onto the next status.
+        In the case of eternal statuses, they are never deactivated (unless dead) and have longer time horizons.
+        Triggered status effects generally get deactivated when the event happens, assuming they wont need to be worried about here.
+
+

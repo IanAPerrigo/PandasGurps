@@ -5,6 +5,8 @@ from data_models.grid import DatabaseBackedGridModel, EphemeralGridModel
 from data_models.entities.being import Being
 
 id_num = 0
+
+
 def get_id():
     global id_num
     if id_num is None:

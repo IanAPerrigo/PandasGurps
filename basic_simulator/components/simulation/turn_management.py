@@ -189,6 +189,5 @@ class TurnManagementFSM(FSM):
 
         # Issue a grid update only if an action was processed.
         if processed_any_action:
-            #Event.signal("notify_grid_update")
-            pass
+            Event.signal("notify_grid_update")
             # TODO: issue other events (perhaps depending on the effects of the actions)

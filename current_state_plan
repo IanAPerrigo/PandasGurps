@@ -1,26 +1,4 @@
 
-7/30/2020
-Things complete:
--Basic visuals
--Turn mechanics
--Actors and behaviors
--Movement actions
--Action Resolver basics
-
-Candidates of things to work on:
-
-### NEW FEATURE ###
--Terrain
-    Interesting features and environment provide movement obstacles
-    Introduces skill challenges for traversing terrain
-
-### DONE ###
--Basic Combat
-    Simple Melee attack:
-        Weapon-less combat
-        combat rolls, damage, etc
-        Life cycle mechanics for actors (dying, unconsciousness, etc)
-
 9/7/2020
 Watched a showcase of numba (used for optimizing python and numpy operations) might be useful for pathfinding, etc.
 
@@ -43,76 +21,13 @@ Teaching is described in the gurps handbook (time to learn will need to be modif
 In order to allow children to learn easier, an innate language between parent and child will give bonuses to teaching.
 
 
-10/15/2020
-### DONE ###
-- NOTE: done for movement only. Will change its shape if new actions require it to.
-Maneuvers = action objects
-have internal structures depending on the maneuver type. Most likely a list of actions.
-The maneuver resolve logic will be what validates the counts/order of each action.
-
 
 10/19/2020
 ### BACKLOG IDEA ###
 Visualization of un-executed moves and failed moves (like an obstacle is in the way)
 
-
-
-### DONE ###
-Modifiers and Status Effects (buffs adn de-buffs)
-
-Reasons:
-Modifiers to stats are required to implement certain status effects (shock, major damage, cripple).
-
-Difficulties:
-Currently, movement and combat reference the stat set directly, meaning each of these operate on base stats and no modifiers.
-Ideally, the modified stat set should be accessed instead of the regular stat set and both stat sets should be consistent with each other.
-The un-modified stat set should still be accessible (since any changes to base stats would happen there.
-
-### DONE ###
-Add decorators for common action related tasks (checking proximity, checking ranging, consciousness)
-
-### PARTIALLY DONE ###
-Life cycle mechanics
-
 ##Needs to be completed##
 Recovery from unconsciousness and retain consciousness
-
-Reasons:
-- After combat, interaction with the environment, actors can take damage.
-- Taking damage has many possible side effects (mostly debuffs and incapacitation/death).
-- Currently debuffs have not been implemented (nothing to manage modifiers / debuffs) but to facilitate this
-resolving actions should have access to managers that calculate when certain modifiers should be applied, etc.
-
-DEPENDS ON: Status Effects and modifiers (unconsciousness and death are de-buffs)
-
-Example: An actor takes a large amount of damage in combat. This will cause the 'Shock' debuff,  but the action
-shouldnt have to implement this directly, since other things can cause shock (movement involving damage).
-
-Debuffs would result after an action is resolved: either triggered by an interaction the action has with the game state,
-or directly by the action (status effect).
-
-Triggers:
-- abstraction layer watching for changes (in this case for unconsciousness and death)
-Flow:
-1. action deals damage to actor.
-2. right after the health is deducted from the total, an event is emitted for health changing.
-3. Event handler(s) determine if any status effects are given to the actor.
-4. After setting the valid status effect, a corresponding event is called to handle its effects on turn order (if they have any)
-
-Unconsciousness:
-Does not effect turn order, but effects what actions an actor can make on a turn (a forced action to try to regain consciousness)
-and Do Nothing.
-
-
-Turn management flow:
-1. Construct turn for actor (advancing turn, generating state)
-2. Attach callbacks and resources to ActorFSM for the current actor (callbacks are for submitting actions to be resolved)
-3. Start the actorFSM by advancing its state (allowing it to start generating actions) and have main FSM wait in TurnLoop State
-4. As actions are generated, the step_complete callback is called, this callback pulls all submitted actions and resolves them.
-    4.a [addition]: during the resolution of actions (maneuvers in particular), an actor can die or go unconscious. This
-    requires action resolvers to check the consciousness of the actor of a particular action before resolution.
-
-
 
 ### NEW FEATURE ###
 Add skills to combat:
@@ -139,12 +54,6 @@ Add stances and their bonuses (status effects) to combat:
 - Allow actors to take defensive maneuvers (all out)
 
 ### NEW FEATURE ###
-Skills:
-
-- Add learned and innate skills that can be used in certain circumstances.
--
-
-### NEW FEATURE ###
 Inventory and equipped items:
 
 - Have items storable in wearable containers on the actor (in the inventory tree).
@@ -156,98 +65,6 @@ Dependencies:
 
 
 ### NEW FEATURE ###
-Energy system:
-
-- Create a system to analyze the amount of FP used over time.
-    - Sustained use of movement, combat or other actions deemed costly.
-- Add "Harvest" and "Eat" actions.
-    - Harvest: if target is disabled (unconscious, dead, pinned).
-    Target can be an entity with the edible status effect.
-    Automatic hit, deal Swing (CUT) damage and gain 1 meal's worth of food.
-    When an entity receives the non-existent status, it can no longer be harvested.
-    The idea is to have lower HP entities count for less food (weaker and generally smaller)
-    Harvested food will be dropped on the floor. An general action to pick up will be added with inventory
-    - Eat: consume food nearby or in a container you own
-    Add status effect "Eaten N" where N is the number of meals eaten
-- Missing a meal:
-    A meal is missed if after 1/3 of the day, the actor doesnt have "Eaten 1"
-    After a meal period has elapsed, remove a level of Eaten from the active eaten status. If none exists, gain a
-    Starvation stack.
-- Starvation:
-    Starvation requires a whole day of rest + 3 whole meals.
-    (might be extreme, here is a test case)
-        Rest being interrupted can easily cause death, since anything can ust come along even if the actor ate and was resting.
-        Might consider not having "all or nothing" regeneration (as per the rules).
-        Consideration: If the actor can eat 3 meals in a day, each meal with the 'rest' buff, then the starvation is gone.
-- Dehydration:
-    - 2 quarts per day required
-        - 8 drinks of water a day
-    - Lose 1 FP every 8 hours
-        - if less than 1 quart was drank in a day, lose an extra 1 FP and 1 HP
-            - Represented by "dehydration N" N being the number of periods of missed water.
-            - "Severe dehydration N" is the number of days drinking less than a quart of water.
-        - all dehydration debuffs can be removed by ample rest and normal water intake.
-- Resting:
-    Resting buff is awarded when strenuous activity is avoided for a period of time.
-    - Strenuous movement: > 40% maximum movement.
-    - Any combat
-    - Lifting Extra-Heavy loads (overexertion)
-    - Dehydration or starvation nullifies the effects of rest.
-    - Rest periods and status-effects
-        - Every 10m of rest: +1 FP or +2 with food
-    - Sleep:
-        - 1 FP per hour uninterrupted
-        - Required in last 24 hours otherwise incur penalties (the only reason to do it, since rest is more efficient)
-
-Breakdown (large feature):
-
-
-# DONE # - Add harvest and eat first, and the status effects given from eating.
-- Next, add non-actor entities that count as food (maybe a status effect "edible")
-    # DONE # - Also add meal entities that will eventually be able to be picked up.
-- Next add a simple 'tick' event system where each turn the tick counter is incremented and an event is sent out.
-    A note about this, statuses not tied directly to tick, a status_update event will be called from the tick event
-    to keep order of operations in case some priority needs to arise. The status_update will handle registration of
-    status updates on particular tick numbers.
-    - Further expand on this.
-        The status effect object can be broken into a few types:
-        # DONE # Countdown status effects: effects that expire after a period of time. This would be like shock, which ticks down over time.
-        # DONE # Eternal status effects: always present like fed, hydrated, rest, etc.
-            # DONE # Also: periodically updated
-        # DONE # Triggered status effects: effects removed by certain circumstances
-        TODO: more?
-    # DONE # - Handling keeping track of when to update (or potentially remove) status effects.
-        A generic way of updating a status effect from one place, without knowing the particulars of each status effect.
-        This means, some level of self management is required, but the different classes of statuses are treated as such
-        in a manager.
-
-        Add an update_tick function to the status effect class.
-        The update_tick function is only called when needed, and using a "next_relevant_tick" field in the status,
-        excessive updates can be ignored.
-        A flag controlling whether a status should be cleaned up will be the signal of if it should be removed.
-
-        e.g. ShockStatus:
-        # Generic fields from StatusEffect
-        tick_added = 0
-        tick_removed = None
-        next_relevant_tick = 1 # Every turn, shock has a modifier reduction.
-        active = True
-
-        update_tick(current_tick, time_scale)
-        # Update shock modifier
-        # check if status has expired
-        # if it has expired
-            active = False
-            next_relevant_tick = None
-            # tick_removed will be set by the manager
-        # if it didnt expire
-            next_relevant_tick += time_scale # Because there is a change every tick (regardless of scale)
-
-        - Now the manager either cleans up the status if it was deactivated or moves onto the next status.
-        In the case of eternal statuses, they are never deactivated (unless dead) and have longer time horizons.
-        Triggered status effects generally get deactivated when the event happens, assuming they wont need to be worried about here.
-
-
 
 # DONE # - Next modify the "fed" and 'quenched' status to be applied on character creation (both at level 0)
     Data associated with each status should be:
@@ -382,3 +199,25 @@ Managing observations:
     - A passive observe action will be injected into the action-set of every actor that can currently perceive.
     These observations generated will be used to craft the subjective state of the actor.
     - Adding an observe action will require state to potentially be generated every action resolution.
+
+
+### CHANGES NEEDED ###
+Change the ephemeral grid model work with the chunk system. ultimately the subjective grid model will be used to
+visualize the grid (and be swappable from entity to entity)
+- Requires changes to observation resolver, since it currently works without chunking.
+
+
+### NEW FEATURE ###
+Environments:
+
+- Add the ability to spawn entities related to an environment, possibly in a procedural form.
+- Walls that obstruct vision and movement
+- different ground types that effect movement, or provide resources.
+    - Since terrain will cover everything, a smart way to store it will be required so that
+    too much space isnt taken up storing it, but still allows for extensibility.
+- Add location objects, and have each location have different lists of attributes
+    - entities, as they are now
+    - terrain
+    - triggers? for later
+
+- Rendering locations easily done and extended by reading the location information.
