@@ -83,7 +83,7 @@ class CharacterCreator(DirectObject):
             # Generate a random location.
             grid = self.simulation_manager.grid_model
             loc = offset_to_cube(np.array((random.randint(-1, 1), random.randint(-1, 1))))
-            grid.insert_absolute(loc, actor.id)
+            grid.insert(loc, actor.id)
         else:
             self.simulation_manager.grid_model.insert(loc, actor.id)
     # TODO: create the genetics stat / adv / dis generator here.

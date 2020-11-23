@@ -58,7 +58,7 @@ class SimulationStateManager:
                 loc_ob.collapse_observation()
                 entity_loc = loc_ob.collapsed_value
 
-                subjective_state.grid.insert_absolute(entity_loc, loc_ob.target_id)
+                subjective_state.grid.insert(entity_loc, loc_ob.target_id)
 
 
             # TODO: further resolve each entity model, in this case the visualObservations would be processed

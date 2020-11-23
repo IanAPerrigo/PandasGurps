@@ -52,10 +52,15 @@ class DatabaseBackedGridModel(ChunkedGrid):
         chunk = super(DatabaseBackedGridModel, self)._load_chunk(chunk_id)
 
         for location in existing_chunk.locations:
-            entity_ids = list(map(lambda e: e.entity_id, location.entities))
-            chunk.location_to_data[location.location_id] = entity_ids
+            entity_ids = set(map(lambda e: e.entity_id, location.entities))
+            # TODO: load terrain
+
+            loc_data = Location()
+            loc_data.entities.update(entity_ids)
+
+            chunk.pos_to_location[location.location_id] = loc_data
             for entity_id in entity_ids:
-                chunk.entity_to_location[entity_id] = location.location_id
+                chunk.entity_to_pos[entity_id] = location.location_id
 
         return chunk
 

@@ -1,12 +1,8 @@
 import numpy as np
 from typing import Dict
 
-from . import GridModel, Location
+from . import GridModel, Location, LocationDataDict
 from utility.coordinates import cubic_manhattan
-
-
-class LocationDataDict(Dict[bytes, Location]):
-    pass
 
 
 class Chunk:
@@ -81,8 +77,6 @@ class ChunkedGrid(GridModel):
 
     def _load_chunk(self, chunk_id):
         chunk = Chunk(chunk_id, self.chunk_radius)
-        chunk.location_to_data = {}
-        chunk.entity_to_location = {}
 
         # Populate the neighbors field of the chunk.
         for i, neighbor_vec in enumerate(chunk.neighbor_chunk_vec):
@@ -181,7 +175,10 @@ class ChunkedGrid(GridModel):
             chunk = self._load_chunk(chunk_id)
 
         offset_key = self._vec2buf(offset)
-        return chunk.location_to_data.get(offset_key)
+        if offset_key not in chunk.pos_to_location:
+            chunk.pos_to_location[offset_key] = Location()
+
+        return chunk.pos_to_location.get(offset_key)
 
     def insert_chunked(self, chunk_id, offset: np.ndarray, entity_id):
         chunk_center = self._buf2vec(chunk_id)
@@ -194,12 +191,12 @@ class ChunkedGrid(GridModel):
                 return
 
         offset_key = self._vec2buf(offset)
-        if offset_key not in chunk.location_to_data:
-            chunk.location_to_data[offset_key] = []
+        if offset_key not in chunk.pos_to_location:
+            chunk.pos_to_location[offset_key] = Location()
 
-        data = chunk.location_to_data.get(offset_key)
-        data.append(entity_id)
-        chunk.entity_to_location[entity_id] = offset_key
+        location = chunk.pos_to_location.get(offset_key)
+        location.entities.add(entity_id)
+        chunk.entity_to_pos[entity_id] = offset_key
         self._obj_chunk[entity_id] = ChunkDescriptor(chunk_id, offset_key)
         self.changes_delta.append(("insert", entity_id, chunk_center, offset))
 
@@ -222,12 +219,12 @@ class ChunkedGrid(GridModel):
     def at(self, absolute_position, hint_chunk=None):
         chunk_id = self._find_chunk_of_location(absolute_position, starting_chunk=hint_chunk)
         offset = self._buf2vec(chunk_id) - absolute_position
-        return self.at(chunk_id, offset)
+        return self.at_chunked(chunk_id, offset)
 
     def insert(self, absolute_position, entity_id, hint_chunk=None):
         chunk_id = self._find_chunk_of_location(absolute_position, starting_chunk=hint_chunk)
         offset = self._buf2vec(chunk_id) - absolute_position
-        return self.insert(chunk_id, offset, entity_id)
+        return self.insert_chunked(chunk_id, offset, entity_id)
 
     def remove(self, entity_id):
         chunk_desc = self._obj_chunk.get(entity_id)
@@ -241,18 +238,18 @@ class ChunkedGrid(GridModel):
         if chunk is None:
             chunk = self._load_chunk(chunk_id)
 
-        loc = chunk.entity_to_location.pop(entity_id, None)
+        loc = chunk.entity_to_pos.pop(entity_id, None)
         if loc is None:
             raise Exception("Entity exists in chunk map but not in the chunk.")
 
-        loc_contents = chunk.location_to_data.get(loc)
+        loc_contents = chunk.pos_to_location.get(loc)
         if loc_contents is None:
             raise Exception("Location is empty.")
 
         # Remove the entity.
         offset = chunk_desc.offset_vec
         self._obj_chunk.pop(entity_id, None)
-        loc_contents.remove(entity_id)
+        loc_contents.entities.remove(entity_id)
 
         self.changes_delta.append(("remove", entity_id, chunk_center, offset))
 
@@ -266,6 +263,10 @@ class ChunkedGrid(GridModel):
         """
         Shorthand for remove-insert with a vector.
         """
+        # Skip empty moves.
+        if (vec == np.array([0, 0, 0])).all():
+            return
+
         curr_chunk = self._obj_chunk.get(entity_id)
         dest_chunk_id = curr_chunk.chunk_id
         new_offset = curr_chunk.offset_vec + vec
@@ -282,4 +283,4 @@ class ChunkedGrid(GridModel):
         self.remove(entity_id)
 
         # Add it to the new location.
-        self.insert(dest_chunk_id, new_offset, entity_id)
+        self.insert_chunked(dest_chunk_id, new_offset, entity_id)

@@ -94,7 +94,7 @@ class ObservationResolver(ActionResolver):
             loc_obsv = LocationObservation(center=center, noise=noise, subject_id=subject_id, target_id=target_id)
             self.simulation_manager.observation_manager.add_observation(loc_obsv)
         else:
-            entity_distances = self.simulation_manager.grid_model.get_entities_in_radius(chunk, offset, 10)
+            entity_distances = self.simulation_manager.grid_model.get_entities_in_radius_chunked(chunk, offset, 10)
 
             for tid, d, a_loc in entity_distances:
                 noise, roll_result = self._get_noise_for(subject_id, tid, d)
