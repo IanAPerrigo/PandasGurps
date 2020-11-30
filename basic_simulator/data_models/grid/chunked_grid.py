@@ -1,8 +1,9 @@
 import numpy as np
 from typing import Dict
+from numba import njit
 
 from . import GridModel, Location, LocationDataDict
-from utility.coordinates import cubic_manhattan
+from utility.coordinates import cubic_manhattan, get_new_center_offset_for_dir, cubic_ring
 
 
 class Chunk:
@@ -14,6 +15,9 @@ class Chunk:
         np.array([[-1, 1, 0], [0, 1, -1]]),
         np.array([[0, 1, -1], [1, 0, -1]]),
     ]
+
+    offset_vec_neighbors = None
+    neighbor_by_offset = None
 
     def __init__(self, chunk_id, chunk_radius):
         self.chunk_id = chunk_id
@@ -29,12 +33,28 @@ class Chunk:
         # by conjugating ((i + 3) % 6)
         self.neighbors = [None] * 6
 
-        self._neighbor_directions = Chunk.chunk_neighbor_dirs
+        if Chunk.offset_vec_neighbors is None:
+            # Create offset vector neighbors.
+            self._neighbor_directions = Chunk.chunk_neighbor_dirs
+            chunk_magnitude = np.array([[self.chunk_radius + 1] * 3, [self.chunk_radius] * 3])
+            directions = np.array(self._neighbor_directions)
+            Chunk.offset_vec_neighbors = np.sum(directions * chunk_magnitude, axis=1)
 
-        chunk_magnitude = np.array([[self.chunk_radius + 1] * 3, [self.chunk_radius] * 3])
-        directions = np.array(self._neighbor_directions)
-        center_repeat = np.repeat([self.chunk_center], directions.shape[0], axis=0)
-        self.neighbor_chunk_vec = center_repeat + np.sum(directions * chunk_magnitude, axis=1)
+            # Use the neighbors to generate links to other chunks (in local coordinates to it can be reused).
+            local_center = np.array([0, 0, 0])
+            periphary_ring = cubic_ring(local_center, self.chunk_radius + 1)
+            Chunk.neighbor_by_offset = {}
+
+            for local_offset in periphary_ring:
+                center, offset, neighbor_indexes = get_new_center_offset_for_dir(Chunk.offset_vec_neighbors,
+                                                                               local_center, local_offset)
+                # Neighbor indexes was packed in an array for optimal performance.
+                neighbor_index = neighbor_indexes[0]
+                offset_key = local_offset.tobytes()
+                Chunk.neighbor_by_offset[offset_key] = (center, offset, neighbor_index)
+
+        center_repeat = np.repeat([self.chunk_center], Chunk.offset_vec_neighbors.shape[0], axis=0)
+        self.neighbor_chunk_vec = center_repeat + Chunk.offset_vec_neighbors
 
     def __str__(self):
         return str(self.chunk_center)
@@ -146,6 +166,40 @@ class ChunkedGrid(GridModel):
 
         return destination_chunk
 
+    def get_locations_of_path(self, path: np.ndarray, starting_chunk: np.ndarray = None):
+        if starting_chunk is None:
+            # determine starting chunk. Worst case performance
+            pass
+
+        locations = []
+        chunk_id = self._vec2buf(starting_chunk)
+        current_chunk = self.chunks.get(chunk_id)
+        direction_list = [j - i for i, j in zip(path[:-1], path[1:])]
+        offset_vec_neighbors = current_chunk.offset_vec_neighbors
+        center, offset = starting_chunk, path[0] - starting_chunk
+        locations.append(self.at_chunked(chunk_id, offset))
+
+        # TODO: not as performant as possible. Maybe numba-fy this function
+        for direction in direction_list:
+            # Calculate new offset
+            offset = offset + direction
+            dist = cubic_manhattan(np.array([0,0,0]), offset)
+            if dist > self.chunk_radius:
+                # Determine which chunk comes from moving in a particular direction.
+                offset_key = self._vec2buf(offset)
+                chunk_vec, new_offset, neighbor_idx = Chunk.neighbor_by_offset.get(offset_key)
+                # Translate the new center and set the new offset.
+                center = center + chunk_vec
+                offset = new_offset
+                chunk_id = self._vec2buf(center)
+                current_chunk = current_chunk.neighbors[neighbor_idx]
+                if current_chunk is None:
+                    current_chunk = self.load_chunk_v(chunk_id)
+
+            locations.append(self.at_chunked(chunk_id, offset))
+
+        return locations
+
     def chunk_exists(self, chunk_id):
         # Note: regular chunked grid has no bounds, so any chunk will exist.
         return True
@@ -157,11 +211,12 @@ class ChunkedGrid(GridModel):
         return self._vec2buf(chunk_vec)
 
     def get_entities_in_radius_chunked(self, chunk_id, offset, radius):
+        # TODO: make this more performant
         # Determine radius-to-chunk-radius ratio, and grab surrounding chunks of relevance.
         # Use the chunk list to filter the _chunk dictionary, then calculate distances.
         center_chunk = self._buf2vec(chunk_id)
         entity_chunks = list(map(lambda e_cid: (e_cid[0], e_cid[1].absolute), self._obj_chunk.items()))
-        entities, chunk_locs = map(list, zip(*entity_chunks))
+        entities, chunk_locs = map(np.array, zip(*entity_chunks))
         center_repeated = np.repeat([center_chunk], repeats=len(chunk_locs), axis=0)
         entity_distances = list(cubic_manhattan(chunk_locs, center_repeated, axis=1))
 
@@ -218,7 +273,7 @@ class ChunkedGrid(GridModel):
 
     def at(self, absolute_position, hint_chunk=None):
         chunk_id = self._find_chunk_of_location(absolute_position, starting_chunk=hint_chunk)
-        offset = self._buf2vec(chunk_id) - absolute_position
+        offset = absolute_position - self._buf2vec(chunk_id)
         return self.at_chunked(chunk_id, offset)
 
     def insert(self, absolute_position, entity_id, hint_chunk=None):

@@ -94,10 +94,12 @@ class GridComponent(DirectObject, PandaNode):
                 color = (0, 0, 0)
 
             loc = self.data_model.at_chunked(chunk.chunk_id, c_sp)
-            terrain = namedtuple("Terrain", ['type', 'color'])
+            terrain = namedtuple("Terrain", ['type', 'color', 'elevation'])
             terrain.type = 'major'
             terrain.color = color
-            loc.terrain.add(terrain)
+            # TODO: noise times maximum height. work this out with the noise generation to make the jumps not drastic
+            terrain.elevation = current_noise * 20
+            loc.major_terrain = terrain
 
             hex_loc = HexLocationComponent(chunk_path, loc, c_sp, self._hex_model)
             hex_loc.render(rbcnp, chunk_model)
@@ -129,6 +131,7 @@ class GridComponent(DirectObject, PandaNode):
         # BFS Queue
         neighbors_to_explore = [starting_chunk]
         seen_neighbors = set()
+        loaded_chunks = {chunk_id}
 
         while len(neighbors_to_explore) != 0:
             chunk = neighbors_to_explore.pop(0)
@@ -145,7 +148,9 @@ class GridComponent(DirectObject, PandaNode):
             # Convert the list of neighbor positions to ids, then load the neighbors.
             for neighbor_vector in chunk.neighbor_chunk_vec:
                 neighbor_id = self.data_model.chunk_vec_to_buf(neighbor_vector)
-                self.data_model.load_chunk(neighbor_id)
+                if neighbor_id not in loaded_chunks:
+                    self.data_model.load_chunk(neighbor_id)
+                    loaded_chunks.add(neighbor_id)
 
             self._render_chunk(chunk)
             neighbors_to_explore.extend(filter(lambda n: n is not None and n not in neighbors_to_explore, chunk.neighbors))

@@ -82,7 +82,9 @@ class CharacterCreator(DirectObject):
         if loc is None:
             # Generate a random location.
             grid = self.simulation_manager.grid_model
-            loc = offset_to_cube(np.array((random.randint(-1, 1), random.randint(-1, 1))))
+            loc = offset_to_cube(np.array((random.randint(-5, 5), random.randint(-5, 5))))
+
+            print("%s: loc: %s" % (actor.id, loc))
             grid.insert(loc, actor.id)
         else:
             self.simulation_manager.grid_model.insert(loc, actor.id)

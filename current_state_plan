@@ -223,14 +223,10 @@ Vision and detection:
 
 - Vision is primarily determined by distance, over a certain distance (based on perception) entities
 are automatically determined as unobserved (to save computation power)
-- If an entity is within range, there is no guarantee that the terrain allows for direct sight.
-A* pathfinding can be used to determine if an entity is in sight.
 
-- Special A*:
-    - Will traverse to the target, as normal A*, using two pieces of information as the heuristic
-        - Terrain elevation: elevation will be considered infinite cost (un-traversable) if it is higher than
-        max(observer_height, target_height). (not quite right, need to draw straight line triangle for viewing angle,
-        and anything higher is blocking)
-        - Horizontal deviation: the size modifier of the target will determine if it can be seen around objects.
-        if the horizontal deviation is greater than the SM of the target then the space is infinite cost.
-            -Currently unimportant, since no SM is implemented
+- Very poor performance with many traces
+    - If an entity is within range, there is no guarantee that the terrain allows for direct sight.
+    Raycast and tracing will determine if the entity is visible.
+
+    Tracing:
+        - use the raycast path to iterate over and calculate whether each location obstructs vision.

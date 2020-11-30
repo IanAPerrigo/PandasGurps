@@ -8,8 +8,13 @@ class Location:
     def __init__(self):
         self.entities = set()
 
+        self.major_terrain = None
+
         # TODO: might change form when terrains are implemented
         self.terrain = set()
+
+    def get_elevation(self):
+        return self.major_terrain.elevation if self.major_terrain is not None else -1
 
 
 class LocationDataDict(Dict[bytes, Location]):

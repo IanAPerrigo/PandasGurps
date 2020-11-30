@@ -54,7 +54,7 @@ application.config.from_dict({
     },
     "data_models": {
         'grid': {
-            "chunk_radius": 5,
+            "chunk_radius": 2,
             "procedural": True
         },
 

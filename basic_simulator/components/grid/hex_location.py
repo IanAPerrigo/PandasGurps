@@ -49,7 +49,7 @@ class HexLocationComponent(PandaNode):
         placeholder.setHpr(0, 0, 0)
 
         # Render the terrain.
-        major_terrain = list(filter(lambda t: t.type == "major", self.data_model.terrain))[0]
+        major_terrain = self.data_model.major_terrain
         terrain_color = major_terrain.color
         placeholder.setColorScale(terrain_color[0], terrain_color[1], terrain_color[2], 0.5)
         placeholder.reparentTo(rbc_np)
@@ -57,7 +57,8 @@ class HexLocationComponent(PandaNode):
         # # TODO: DEBUG ONLY
         text_node = TextNode('loc label')
         text_node.setAlign(TextNode.ABoxedCenter)
-        text_node.setText("(%d, %d, %d)" % (self.position[0], self.position[1], self.position[2]))
+        #text_node.setText("(%d, %d, %d)" % (self.position[0], self.position[1], self.position[2]))
+        text_node.setText("(%.2f)\n(%s, %s, %s)" % (self.data_model.get_elevation(), self.position[0], self.position[1], self.position[2]))
         text_path = self.path.attachNewNode(text_node)
         text_path.setScale(0.25)
         text_path.setPos(0, -.1, 0)

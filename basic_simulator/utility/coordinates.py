@@ -1,33 +1,37 @@
 from typing import Iterator
 from functools import partial
 
+from direct.showbase.ShowBase import ShowBase
+from panda3d.core import Vec3, Point3
+from panda3d.bullet import BulletWorld, BulletCylinderShape, BulletRigidBodyNode, YUp
+
+from numba import jit, njit, vectorize, prange
+
 import numpy as np
 import heapq
 import collections
 
 
-def cube_to_offset(cubic_coord: np.array):
-    col = int(cubic_coord[0] + (cubic_coord[2] - (cubic_coord[2] & 1)) / 2)
-    row = cubic_coord[2]
-    return np.array((col, row))
+@njit
+def cube_to_offset(cubic_coord: np.ndarray):
+    result = np.empty(2, dtype=np.int32)
+    result[0] = int(cubic_coord[0] + (cubic_coord[2] - (cubic_coord[2] & 1)) / 2)
+    result[1] = cubic_coord[2]
+    return result
 
 
-def slow_cubic_manhattan(c1: np.ndarray, c2: np.ndarray, axis=0):
-    return np.linalg.norm(c2 - c1, ord=1, axis=axis) / 2
-
-
+@njit
 def cubic_manhattan(c1: np.ndarray, c2: np.ndarray, axis=0):
     return np.absolute(c2 - c1).sum(axis=axis) / 2
 
-
-cubic_neighbors = [
+cubic_neighbors = np.array([
     np.array([1, 0, -1]),
     np.array([1, -1, 0]),
     np.array([0, -1, 1]),
     np.array([-1, 0, 1]),
     np.array([-1, 1, 0]),
     np.array([0, 1, -1]),
-]
+])
 
 
 # TODO: Incorrect
@@ -41,22 +45,25 @@ offset_neighbors = [
 ]
 
 
+@njit
 def cubic_ring(center: np.ndarray, radius):
-    results = []
     current_hex = center + cubic_neighbors[4] * radius
 
-    for i in range(6):
-        for _ in range(radius):
-            results.append(current_hex)
+    results = np.empty((radius * 6, 3), dtype=np.int32)
+    for i in prange(6):
+        for _ in prange(radius):
+            results[_ + radius * i] = current_hex
             current_hex = current_hex + cubic_neighbors[i]
 
     return results
 
 
+@njit
 def cubic_spiral(center: np.ndarray, radius):
-    results = [center]
-    for i in range(1, radius):
-        results.extend(cubic_ring(center, i))
+    results = np.empty((1, 3), dtype=np.int32)
+    results[0] = center
+    for i in prange(1, radius):
+        results = np.append(results, cubic_ring(center, i), axis=0)
     return results
 
 
@@ -186,34 +193,100 @@ class NeighborGraph(collections.MutableMapping):
 # print("done: a %s" % (a / number))
 # print("done: b %s" % (b / number))
 
-
-# Ray-casting is much faster than A* for LOS calculations.
-def cube_round(v: np.ndarray):
-    vr = np.round(v)
-    vd = vr - v
+@njit
+def round_vec(vr: np.ndarray, vd: np.ndarray):
     if vd[0] > vd[1] and vd[0] > vd[2]:
         vr[0] = -vr[1]-vr[2]
     elif vd[1] > vd[2]:
         vr[1] = -vr[0]-vr[2]
     else:
         vr[2] = -vr[0]-vr[1]
-    return vr.astype(int)
+
+    return vr
 
 
-def lerp(v1: np.ndarray, v2: np.ndarray, t: float):
-    return cube_round(v1 + (v2 - v1) * t)
-    #return v1 + (v2 - v1) * t
+# Ray-casting is much faster than A* for LOS calculations.
+@njit
+def cube_round(v: np.ndarray):
+    vr = np.empty_like(v)
+    np.round(v, 0, vr)
+    vd = vr - v
+    vr_vd_stack = np.dstack((vr, vd))
+
+    r_vr = np.zeros_like(v)
+    for ii, vr_vd in enumerate(vr_vd_stack):
+        _ = vr_vd.T
+        rv = round_vec(_[0], _[1])
+        r_vr[ii] = rv
+
+    return r_vr.astype(np.int32)
 
 
+@njit
 def cast_hex_ray(v1: np.ndarray, v2: np.ndarray):
     n = cubic_manhattan(v1, v2)
-    partial_lerp = partial(lerp, v1, v2)
-    lerp_intervals = np.array([float(i) / n for i in range(int(n) + 1)])
+    if n == 0:
+        shortest_path = np.empty((2, 3), dtype=np.int32)
+        shortest_path[0] = v1.astype(np.int32)
+        shortest_path[1] = v2.astype(np.int32)
+        return shortest_path
 
-    return np.array(list(map(partial_lerp, lerp_intervals)))
+    v1 = v1 + np.array([1e-6, 2e-6, -3e-6])
+    v2 = v2 + np.array([1e-6, 2e-6, -3e-6])
 
-import timeit
-v1 = np.array([0,0,0])
-v2 = np.array([1,-3,2]) * 1
-results = timeit.timeit(lambda: cast_hex_ray(v1, v2), number=100)
-print(results / 100)
+    lerp_count = int(n) + 1
+    lerp_intervals = np.empty((lerp_count, 1))
+    for ii, _ in enumerate(range(lerp_count)):
+        lerp_intervals[ii] = np.array(float(_) / n)
+
+    lerp_shape = (lerp_intervals.shape[0], 3)
+    V1 = np.empty(lerp_shape)
+    for ii, v in enumerate(lerp_intervals):
+        V1[ii] = np.expand_dims(v1, axis=0)
+
+    V21 = np.empty(lerp_shape)
+    for ii, v in enumerate(lerp_intervals):
+        V21[ii] = np.expand_dims(v2 - v1, axis=0)
+
+    return cube_round(V1 + (V21 * lerp_intervals))
+
+
+@njit
+def elem_dot_matrix_with_vector(mat: np.ndarray, vec: np.ndarray):
+    mat_f, vec_f = mat.astype(np.float64), vec.astype(np.float64)
+    result = np.empty(mat_f.shape[0])
+    for ii, row in enumerate(mat_f):
+        result[ii] = np.dot(row, vec_f)
+    return result.astype(np.int32)
+
+
+@njit
+def get_new_center_offset_for_dir(mat: np.ndarray, center: np.ndarray, offset: np.ndarray):
+    results = np.empty((3, 3), dtype=np.int32)
+    dot_prod = elem_dot_matrix_with_vector(mat, offset)
+
+    max_dir = np.argmax(dot_prod)
+    new_center = center + mat[max_dir]
+    results[2] = np.repeat(max_dir, 3)
+    results[1] = (center + offset) - new_center
+    results[0] = new_center
+    return results
+
+
+# Initialization of njit functions (required to compile them)
+v = np.array([1, 0, -1])
+c2 = cube_to_offset(v)
+
+center = np.array([0, 0, 0])
+radius = 1
+c1 = cubic_ring(center, radius)
+s1 = cubic_spiral(center, radius)
+
+u = np.random.randint(0, 100, size=(2, 3))
+cubic_manhattan(u[0], u[1])
+cast_hex_ray(u[0], u[1])
+
+mat = cubic_neighbors
+vec = np.array([0, -2, 2])
+center = np.array([0, 0, 0])
+get_new_center_offset_for_dir(mat, center, vec)

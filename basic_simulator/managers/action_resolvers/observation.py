@@ -8,7 +8,7 @@ from data_models.state.observation.location_observation import *
 from data_models.actions.action import ActionStatus
 from data_models.actions.observation import ObservationAction
 from data_models.entities.stats import StatType
-from utility.coordinates import cubic_manhattan
+from utility.coordinates import cubic_manhattan, cast_hex_ray
 from utility.rolling import SuccessRoll, RollResult
 
 
@@ -21,6 +21,7 @@ class ObservationResolver(ActionResolver):
 
         self.roll_versus_factory = roll_versus_factory
         self.logger = logger
+        self.path_cache = {}
 
     def _get_noise_for(self, subject_id, target_id, d, divisor=1.0):
         mod_value = 0
@@ -61,7 +62,8 @@ class ObservationResolver(ActionResolver):
         subject_id = action.actor
         target_id = action.target_id
         existing_obsvs = self.simulation_manager.observation_manager.get_observations(subject_id)
-        chunk, offset = self.simulation_manager.grid_model.get_chunk_offset(subject_id)
+        s_center, s_offset = self.simulation_manager.grid_model.get_chunk_offset(subject_id)
+        s_chunk = s_center.tobytes()
 
         # Determine which type of observation is being done, Passive or Direct.
         if target_id is not None:
@@ -94,12 +96,51 @@ class ObservationResolver(ActionResolver):
             loc_obsv = LocationObservation(center=center, noise=noise, subject_id=subject_id, target_id=target_id)
             self.simulation_manager.observation_manager.add_observation(loc_obsv)
         else:
-            entity_distances = self.simulation_manager.grid_model.get_entities_in_radius_chunked(chunk, offset, 10)
+            entity_distances = self.simulation_manager.grid_model.get_entities_in_radius_chunked(s_center, s_offset, 10)
+            center = self.simulation_manager.grid_model.get_location(subject_id)
 
             for tid, d, a_loc in entity_distances:
+                if tid == subject_id:
+                    continue
+
+                # Roll for perception and get the noisiness of the observation.
                 noise, roll_result = self._get_noise_for(subject_id, tid, d)
                 if noise is None:
                     continue
+
+                t_center, t_offset = self.simulation_manager.grid_model.get_chunk_offset(tid)
+                t_absolute = t_center + t_offset
+                t_chunk = t_center.tobytes()
+
+                # Check the cache for a path
+                key1, key2 = center.tobytes() + t_absolute.tobytes(), t_absolute.tobytes() + center.tobytes()
+                if key1 in self.path_cache:
+                    path_to_t = self.path_cache[key1]
+                elif key2 in self.path_cache:
+                    path_to_t = self.path_cache[key2]
+                else:
+                    # Cast a ray and find the MAX height and associated index along the path
+                    path_to_t = cast_hex_ray(center, t_absolute)
+                    self.path_cache[key1] = path_to_t
+                    self.path_cache[key2] = np.flip(path_to_t, axis=0)
+
+                # Get all the locations
+                locations = self.simulation_manager.grid_model.get_locations_of_path(path_to_t, s_center)
+
+                # Ignore ends because they wont affect visibility.
+                inter_path = locations[1:-1]
+
+                if len(inter_path) > 0:
+                    # TODO: When SM is implemented
+                    sm_s, sm_t = 1, 1
+                    starting_elev = locations[0].get_elevation() + sm_s * 2
+                    ending_elev = locations[-1].get_elevation() + sm_t * 2
+                    slope = (ending_elev - starting_elev) / d
+
+                    index, location = max(enumerate(inter_path), key=lambda n: n[1].get_elevation())
+
+                    if location.get_elevation() >= starting_elev + (index + 1) * slope:
+                        continue
 
                 # If an observation already exists, update it.
                 if tid in existing_obsvs.keys():
