@@ -37,6 +37,7 @@ class ActorFSM(FSM.FSM):
         self.simulation_manager = simulation_manager
         self.poll_task = None
         self.keys = None # TODO: Replace with key manager later
+        self.current_state = None
 
     """
     Configuration of the actor.
@@ -79,6 +80,8 @@ class ActorFSM(FSM.FSM):
         :return:
         """
         self.simulation_manager.generate_subjective_state_for(self.data_model.entity_id)
+        self.current_state = self.simulation_manager.entity_states[self.data_model.entity_id]\
+            .subjective_simulation_state
 
         # Schedule a polling loop for
         self.poll_task = taskMgr.add(self.poll_behavior, "wait_for_action")
@@ -94,6 +97,11 @@ class ActorFSM(FSM.FSM):
 
             self.step_complete()
 
+            # Regenerate the state for the actor.
+            self.simulation_manager.generate_subjective_state_for(self.data_model.entity_id)
+            self.current_state = self.simulation_manager.entity_states[self.data_model.entity_id]\
+                .subjective_simulation_state
+
     def exitTakingTurn(self):
         # Unbind the task that calculates the move.
         # TODO: notify the behavior to become inactive (close out any processing its doing)
@@ -101,14 +109,12 @@ class ActorFSM(FSM.FSM):
         self.poll_task = None
 
     def poll_behavior(self, task):
-        current_state = self.simulation_manager.entity_states[self.data_model.entity_id]
-
         # TODO: remove this from here, it should be injected to any behavior that needs it without the FSMs concern
         self.behavior.keys = self.keys
 
         # TODO: allow None as an action that does not re-generate the state so that the behavior can have
         #  its own threaded/async functions that complete eventually.
-        taken_actions = self.behavior.act(current_state)
+        taken_actions = self.behavior.act(self.current_state)
 
         if taken_actions is not None:
             # Set the actions primary actor.

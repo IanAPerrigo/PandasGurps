@@ -10,6 +10,7 @@ from events import Event
 from components.grid.hex_location import HexLocationComponent
 from data_models.grid.persistent_grid import DatabaseBackedGridModel
 from data_models.grid.chunked_grid import Chunk
+from data_models.terrain.basic_terrain import *
 from utility.coordinates import *
 
 
@@ -79,26 +80,28 @@ class GridComponent(DirectObject, PandaNode):
         relative_spiral_matrix = np.array(self.cubic_spiral)
         spiral_matrix = relative_spiral_matrix + np.repeat([c_new_chunk], repeats=relative_spiral_matrix.shape[0], axis=0)
 
-        for c_sp in spiral_matrix:
+        for ii, c_sp in enumerate(spiral_matrix):
             # TODO: remove the terrain generation and put in a generator class.
 
             center = (256, 256)
             o_x, o_y = cube_to_offset(c_sp)
             current_noise = self.terrain_noise[center[0] + o_x][center[1] + o_y]
+            # TODO: noise times maximum height. work this out with the noise generation to make the jumps not drastic
+            elevation = current_noise * 20
+            terrain = None
             if -1.0 <= current_noise <= -0.5:
-                color = (0, 0, 1)
+                terrain = WaterTerrain(elevation=elevation)
             elif -0.9 <= current_noise <= 0.6:
                 percent = (current_noise + 0.9) / 1.5
-                color = (0, 1 * percent, 0)
+                modulated_color = 0, 1 * percent, 0
+                terrain = GrassTerrain(elevation=elevation, color=modulated_color)
             else:
-                color = (0, 0, 0)
+                # Cliff are steeper than most terrain.
+                elevation = elevation * 1.5
+                terrain = CliffTerrain(elevation=elevation)
 
-            loc = self.data_model.at_chunked(chunk.chunk_id, c_sp)
-            terrain = namedtuple("Terrain", ['type', 'color', 'elevation'])
-            terrain.type = 'major'
-            terrain.color = color
-            # TODO: noise times maximum height. work this out with the noise generation to make the jumps not drastic
-            terrain.elevation = current_noise * 20
+            c_rsp = relative_spiral_matrix[ii]
+            loc = self.data_model.at_chunked(chunk.chunk_id, c_rsp)
             loc.major_terrain = terrain
 
             hex_loc = HexLocationComponent(chunk_path, loc, c_sp, self._hex_model)
@@ -125,7 +128,7 @@ class GridComponent(DirectObject, PandaNode):
         chunk_id = self.data_model.chunk_vec_to_buf(center_chunk)
         starting_chunk = self.data_model.load_chunk(chunk_id)
 
-        chunk_radius_to_render = 5
+        chunk_radius_to_render = 2
         radius_to_render = (self.data_model.chunk_radius * 3 + 1) * chunk_radius_to_render
 
         # BFS Queue

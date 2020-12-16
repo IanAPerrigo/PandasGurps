@@ -218,15 +218,48 @@ Environments:
 
 
 
-### NEW FEATURE ###
+### Complete ###
 Vision and detection:
 
 - Vision is primarily determined by distance, over a certain distance (based on perception) entities
 are automatically determined as unobserved (to save computation power)
 
-- Very poor performance with many traces
-    - If an entity is within range, there is no guarantee that the terrain allows for direct sight.
-    Raycast and tracing will determine if the entity is visible.
+- If an entity is within range, there is no guarantee that the terrain allows for direct sight.
+Raycast and tracing will determine if the entity is visible.
 
-    Tracing:
-        - use the raycast path to iterate over and calculate whether each location obstructs vision.
+Tracing:
+    - use the raycast path to iterate over and calculate whether each location obstructs vision.
+
+
+
+### IMPROVEMENT ###
+Make a more efficient system for representing game state.
+Previous implementations copied each location object, which was wasteful and inefficient.
+
+Important criteria to capture:
+    - Some subjective fields (allowing for false observations) such as the locations of entities.
+    - Static fields, that are provided always (if the location is visible)
+        - Terrain features
+    - A way to hide locations that aren't determined to be 'in range'
+        - Use the 'Spiral' generator.
+            Pros:
+                - configurable distance as a radius
+            Cons:
+                - Wouldn't want to regenerate every observation.
+                    - Mitigated by generating once, and if the location is attempted an access, offset the coordinates
+                    from the spiral to see if its in bounds (of the center) pushing the computation time to access,
+                    rather than on observation.
+                        - Potential caveat is when an AI parses the whole FOV, meaning the calculation will be done
+                        anyway, but potentially all at once, and inefficiently.
+    - Reuse of the existing objects where possible
+        - Create a read only view of the world, that allows the state to be read for a particular location
+        but still reference the objects as they are in the real state, to reduce the overhead of generating a new state.
+
+
+### OPTIMIZATION ###
+
+subjective grids
+
+all (called most often, since it will be used to turn the grid into an image)
+    - Internal map that is returned for calls to all() with no work done under the hood.
+        - No calls to at() of the underlying grid.

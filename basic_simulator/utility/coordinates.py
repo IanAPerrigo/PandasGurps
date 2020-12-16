@@ -67,6 +67,10 @@ def cubic_spiral(center: np.ndarray, radius):
     return results
 
 
+def in_spiral(vector: np.ndarray, rows: np.ndarray):
+    return np.equal(rows, vector).all(1).any()
+
+
 def offset_spiral(center: np.ndarray, radius):
     c_spiral = cubic_spiral(center, radius)
     return list(map(lambda c: cube_to_offset(c), c_spiral))

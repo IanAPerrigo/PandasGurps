@@ -17,6 +17,9 @@ class AiBehavior(Behavior):
         self.done = True
 
     def act(self, state: SimulationState):
+        my_pos = state.grid_view.get_location(self.entity_id)
+        locations = state.grid_view.all()
+
         if self.done:
             maneuver = YieldTurnManeuver()
             maneuver.status = ActionStatus.READY

@@ -211,7 +211,7 @@ class ChunkedGrid(GridModel):
         return self._vec2buf(chunk_vec)
 
     def get_entities_in_radius_chunked(self, chunk_id, offset, radius):
-        # TODO: make this more performant
+        # TODO: make this more performant, and not calculate entities clearly too far away (using chunk sizes)
         # Determine radius-to-chunk-radius ratio, and grab surrounding chunks of relevance.
         # Use the chunk list to filter the _chunk dictionary, then calculate distances.
         center_chunk = self._buf2vec(chunk_id)
@@ -310,6 +310,9 @@ class ChunkedGrid(GridModel):
 
     def get_location(self, entity_id):
         chunk_desc = self._obj_chunk.get(entity_id)
+        if chunk_desc is None:
+            return None
+
         chunk_center = self._buf2vec(chunk_desc.chunk_id)
         chunk_offset = self._buf2vec(chunk_desc.offset)
         return chunk_center + chunk_offset

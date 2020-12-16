@@ -67,6 +67,7 @@ class ObservationResolver(ActionResolver):
 
         # Determine which type of observation is being done, Passive or Direct.
         if target_id is not None:
+            # TODO: incomplete
             # Direct observation, improve LocationObservation that already exists.
             center = self.simulation_manager.grid_model.get_loc_of_obj(subject_id)
             target_loc = self.simulation_manager.grid_model.get_loc_of_obj(target_id)
@@ -141,6 +142,8 @@ class ObservationResolver(ActionResolver):
 
                     if location.get_elevation() >= starting_elev + (index + 1) * slope:
                         continue
+
+                    # TODO: if desired, have the percentage of the target visible determine noise instead of distance.
 
                 # If an observation already exists, update it.
                 if tid in existing_obsvs.keys():

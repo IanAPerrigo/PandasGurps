@@ -34,7 +34,8 @@ class LocationObservation(FuzzyObservation):
     def collapse_observation(self):
         # Dont collapse multiple times.
         if self.collapsed_value is not None:
-            return
+            return False
 
         sampled_value = self.center + self.noise * LocationObservation.get_sample()
         self.collapsed_value = np.round(sampled_value).astype(np.int)
+        return True

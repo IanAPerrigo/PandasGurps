@@ -78,11 +78,14 @@ class CharacterCreator(DirectObject):
         # TODO: probably want to add everything after this to a different manager that registers entities for drawing.
         actor.load()
 
+        static_locs = {0: [-1, -3, 4], 1: [7, -4, -3], 2: [-7, 2, 5]}
+
         # Add the entity to the grid.
         if loc is None:
             # Generate a random location.
             grid = self.simulation_manager.grid_model
-            loc = offset_to_cube(np.array((random.randint(-5, 5), random.randint(-5, 5))))
+            #loc = offset_to_cube(np.array((random.randint(-5, 5), random.randint(-5, 5))))
+            loc = np.array(static_locs[actor.id])
 
             print("%s: loc: %s" % (actor.id, loc))
             grid.insert(loc, actor.id)

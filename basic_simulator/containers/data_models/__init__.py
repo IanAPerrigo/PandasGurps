@@ -2,7 +2,7 @@ from dependency_injector import containers, providers
 from uuid import uuid4, uuid1
 
 from data_models.grid.persistent_grid import DatabaseBackedGridModel
-from data_models.grid.ephemeral_grid import EphemeralGridModel
+from data_models.grid.ephemeral_grid import SubjectiveGridModel
 from data_models.entities.being import Being
 
 id_num = 0
@@ -32,7 +32,7 @@ class DataModels(containers.DeclarativeContainer):
     )
 
     grid_model_subjective = providers.Factory(
-        EphemeralGridModel
+        SubjectiveGridModel
     )
 
     being_model = providers.Factory(
