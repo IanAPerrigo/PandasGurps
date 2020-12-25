@@ -1,4 +1,7 @@
 from .status_effect import StatusEffect, MonotonicallyDecreasingStatusEffect
+
+from data_models.entities.stats.stat_set import StatType
+from data_models.entities.modifiers.modifier import Modifier
 from utility.time import *
 
 
@@ -35,7 +38,22 @@ class Starving(StatusEffect):
         super(Starving, self).__init__()
 
         self.period_length_seconds = period_length_seconds
-        self.level = level
+        self.last_level = None
+        self._level = level
+
+        # Static modifiers to be changed based on
+        self.max_fp_reduction = Modifier()
+        fp_modifiers = {self.max_fp_reduction}
+        self.modifiers[StatType.FP.value] = fp_modifiers
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value):
+        self.last_level = self._level
+        self._level = value
 
     def bootstrap(self, tick, time_scale):
         self.added_at_tick = tick
@@ -53,8 +71,7 @@ class Starving(StatusEffect):
         :param time_scale:
         :return:
         """
-        # Starvation increases by one per period.
-        self.level += 1
+        # Starvation is increased as a trigger condition. Nothing to do except schedule next tick.
         #ticks_per_period = self.period_length_seconds // time_scale
         self.next_relevant_tick = tick + self.period_length_seconds
 

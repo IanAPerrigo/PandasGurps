@@ -46,3 +46,9 @@ class TickManager:
         # Tick all status effects
         self.status_effect_manager.tick_status_effects(self.tick_value, self.tick_rate)
 
+        # TODO: after all statuses ticked, trigger effects to resolve new statuses.
+        # TODO: call to generic status trigger manager
+
+        # Clear out all triggered statuses.
+        self.status_effect_manager.triggered_statuses.clear()
+

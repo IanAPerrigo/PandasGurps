@@ -1,3 +1,5 @@
+from data_models.entities.modifiers.modifier_set import ModifierSet
+
 
 class StatusEffect:
     """
@@ -18,8 +20,8 @@ class StatusEffect:
 
     """
 
-    def __init__(self, modifiers: dict = None):
-        self.modifiers = modifiers if modifiers is not None else dict()
+    def __init__(self, modifiers: ModifierSet = None):
+        self.modifiers = modifiers if modifiers is not None else ModifierSet()
         self.added_at_tick = None
         self.removed_at_tick = None
         self.next_relevant_tick = None
@@ -41,7 +43,7 @@ class StatusEffect:
 
 
 class MonotonicallyDecreasingStatusEffect(StatusEffect):
-    def __init__(self, period_length_seconds, level, modifiers: dict = None):
+    def __init__(self, period_length_seconds, level, modifiers: ModifierSet = None):
         super(MonotonicallyDecreasingStatusEffect, self).__init__(modifiers)
 
         self.period_length_seconds = period_length_seconds
@@ -79,3 +81,9 @@ class ScaleInvariantStatusEffect(StatusEffect):
     amount of tick before and after. Regular status effects depend on the time elapsed; 5 ticks in the future is
     actually 5 seconds in the future with a time scale of 1, but is 1 tick with a time scale of 5.
     """
+
+    def update_tick(self, tick, time_scale):
+        pass
+
+    def bootstrap(self, tick, time_scale):
+        pass

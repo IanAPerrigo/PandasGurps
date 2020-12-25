@@ -1,4 +1,4 @@
-from typing import Dict, List, Set
+from typing import Dict, List, Set, cast
 
 from .status_effects import StatusEffect
 
@@ -16,8 +16,17 @@ class StatusSet:
             self.store[key] = list()
         self.store[key].append(status)
 
-    def get(self, status_type: type) -> list:
+    def get(self, status_type: type) -> List[StatusEffect]:
         return self.store.get(status_type)
+
+    def get_single(self, status_type: type) -> StatusEffect:
+        all_statuses = self.get(status_type)
+        if all_statuses is None or len(all_statuses) == 0:
+            return None
+        elif len(all_statuses) > 1:
+            raise Exception("Found multiple statuses when only one was expected.")
+
+        return all_statuses[0]
 
     def has(self, item: StatusEffect) -> bool:
         return item in self.store[type(item)]

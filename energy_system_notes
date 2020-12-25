@@ -90,3 +90,6 @@ Breakdown (large feature):
         Triggered status effects generally get deactivated when the event happens, assuming they wont need to be worried about here.
 
 
+### FEATURE ###
+Energy specific tick trigger.
+Manager related to the

@@ -37,7 +37,19 @@ class GridView:
     def at(self, absolute_position):
         raise NotImplementedError()
 
+    def at_key(self, loc_key):
+        raise NotImplementedError()
+
     def get_location(self, entity_id):
+        raise NotImplementedError()
+
+    def watch(self, watcher_id):
+        raise NotImplementedError()
+
+    def get_deltas_for(self, watcher_id):
+        raise NotImplementedError()
+
+    def all(self):
         raise NotImplementedError()
 
 

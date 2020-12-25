@@ -232,7 +232,7 @@ Tracing:
 
 
 
-### IMPROVEMENT ###
+### COMPLETE IMPROVEMENT ###
 Make a more efficient system for representing game state.
 Previous implementations copied each location object, which was wasteful and inefficient.
 
@@ -256,10 +256,16 @@ Important criteria to capture:
         but still reference the objects as they are in the real state, to reduce the overhead of generating a new state.
 
 
-### OPTIMIZATION ###
+### FEATURE ###
 
-subjective grids
+Game State API optimized for AI consumption
 
-all (called most often, since it will be used to turn the grid into an image)
-    - Internal map that is returned for calls to all() with no work done under the hood.
-        - No calls to at() of the underlying grid.
+
+Providing state deltas:
+    - Subjective game state provided to the act function.
+        - State object should support incremental reads (maybe another wrapper object that acts like a sequence)
+            - DeltaObject, supports all() which grabs all deltas that exist that haven't been processed yet.
+            - Incremental reads will allow for partial updates of the AI's game state 'image', reducing the workload
+            required at any step.
+            - DeltaObject will be inherited from to provide the tracking functionality of tracking changes in the state.
+                - Writes that add changes to the object will be intercepted by the delta class and track accordingly.

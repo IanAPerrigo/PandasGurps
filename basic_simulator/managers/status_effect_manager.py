@@ -1,6 +1,10 @@
-from uuid import UUID
+from typing import Dict, Set
 from managers.simulation_manager import SimulationStateManager
 from data_models.entities.status_effects.status_effect import StatusEffect
+
+
+class TriggeredStatuses(Dict[object, Set]):
+    pass
 
 
 class StatusEffectManager:
@@ -9,6 +13,9 @@ class StatusEffectManager:
 
         # UUID to list mapping of
         self.new_status_effects = {}
+
+        # Dictionary of triggered statuses by the entity they belong to.
+        self.triggered_statuses = TriggeredStatuses()
 
     def add_status_effect_to_entity(self, entity_id, status_effect: StatusEffect):
         if entity_id not in self.new_status_effects:
@@ -38,6 +45,16 @@ class StatusEffectManager:
 
         self.new_status_effects.clear()
 
+    def _add_triggered_status(self, entity_id, status):
+        status_set = self.triggered_statuses.get(entity_id)
+
+        if status_set is None:
+            status_set = set()
+            # TODO: check if the status effect requires a trigger.
+            self.triggered_statuses[entity_id] = status_set
+
+        status_set.add(status)
+
     def tick_status_effects(self, tick, time_scale):
         for entity_id, model in self.simulation_manager.entity_model_manager.items():
             # Filter status effects requiring tick, and apply the tick.
@@ -45,6 +62,7 @@ class StatusEffectManager:
                                                   model.status_effects.items()))
             for se in statuses_requiring_tick:
                 se.update_tick(tick, time_scale)
+                self._add_triggered_status(entity_id, se)
 
             # Gather and cleanup the deactivated statuses.
             deactivated_statuses = filter(lambda se: not se.active, model.status_effects.items())

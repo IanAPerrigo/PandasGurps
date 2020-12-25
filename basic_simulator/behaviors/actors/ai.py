@@ -17,8 +17,26 @@ class AiBehavior(Behavior):
         self.done = True
 
     def act(self, state: SimulationState):
-        my_pos = state.grid_view.get_location(self.entity_id)
-        locations = state.grid_view.all()
+        # TODO: ai implementation
+        # Get deltas
+        # deltas = state.grid_view.get_deltas_for(self.entity_id)
+        # delta_locs = None
+        #
+        # # If there is an empty set of deltas, then the watcher isn't currently tracked.
+        # if deltas is None:
+        #     # Watch the view and get all the locations in the view.
+        #     state.grid_view.watch(self.entity_id)
+        #     delta_locs = state.grid_view.all()
+        # else:
+        #     delta_locs = dict()
+        #     for delta in deltas:
+        #         delta_locs[delta] = state.grid_view.at_key(delta)
+        #
+        # # TODO: data processing, image creation and manipulation.
+        #
+        #
+        # my_pos = state.grid_view.get_location(self.entity_id)
+        # locations = state.grid_view.all()
 
         if self.done:
             maneuver = YieldTurnManeuver()

@@ -12,9 +12,16 @@ class Being(Entity):
     """
     Base class for any entity with stats.
     """
-    def __init__(self, entity_id, base_stats: StatSet, modified_stats: ModifiedStatSet, status_effects: StatusSet = None):
+    def __init__(self, entity_id, base_stats: StatSet, modifier_set: ModifierSet,
+                 modified_stats: ModifiedStatSet, status_effects: StatusSet = None):
         super(Being, self).__init__(entity_id=entity_id, status_effects=status_effects)
         self.base_stats = base_stats
+        self.modifier_set = modifier_set
+
+        # TODO: modified set should determine the modifiers on every type of stat, skill, and anything else that can
+        #  be modified.
+
+        # Modified sets of attributes.
         self.stats = modified_stats
         self.advantages = None
         self.disadvantages = None
@@ -25,17 +32,24 @@ class Being(Entity):
 
     def add_status_effect(self, a_status_effect: StatusEffect):
         self.status_effects.add(a_status_effect)
-        map(self.stats.add_modifier, a_status_effect.modifiers)
+        for modified, mod_set in a_status_effect.modifiers.items():
+            for modifier in mod_set:
+                self.stats.add_modifier(modifier, stat_type=modified)
 
     def remove_status_effect(self, a_status_effect: StatusEffect):
         self.status_effects.remove(a_status_effect)
-        map(self.stats.remove_modifier, a_status_effect.modifiers)
+
+        for mod_set in a_status_effect.modifiers.values():
+            for modifier in mod_set:
+                self.stats.remove_modifier(modifier)
 
     def remove_all_status_effects(self, a_status_effect_type: type):
         if self.status_effects.is_affected_by(a_status_effect_type):
             status_effects = self.status_effects.get(a_status_effect_type)
             for a_status_effect in status_effects:
-                map(self.stats.remove_modifier, a_status_effect.modifiers)
+                for mod_set in a_status_effect.modifiers.values():
+                    for modifier in mod_set:
+                        self.stats.remove_modifier(modifier)
 
             self.status_effects.remove_all(a_status_effect_type)
 

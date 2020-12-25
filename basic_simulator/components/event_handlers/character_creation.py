@@ -10,6 +10,7 @@ from managers.entity_manager import EntityComponentManager
 
 from behaviors.actors import *
 
+from data_models.entities.modifiers.modifier_set import ModifierSet
 from data_models.entities.being import Being
 from data_models.entities.stats import StatType, StatSet, SecondaryStats, PrimaryStats, get_derived
 from data_models.entities.modifiers import ModifiedStatSet
@@ -55,8 +56,9 @@ class CharacterCreator(DirectObject):
         etc.
         """
         # Create the base model from all the pieces.
-        modified_stats = ModifiedStatSet(base_stats)
-        actor_model = self.being_factory(base_stats=base_stats, modified_stats=modified_stats)
+        modifier_set = ModifierSet()
+        modified_stats = ModifiedStatSet(base_stats, modifier_set)
+        actor_model = self.being_factory(base_stats=base_stats, modifier_set=modifier_set, modified_stats=modified_stats)
 
         if behavior_type == HumanPlayerBehavior:
             behavior = self.human_behavior_factory(actor_model.entity_id)

@@ -175,11 +175,43 @@ class SubjectiveGridView(GridView):
         self._source_grid = source_grid
         self._subjective_locations = {}
 
+        # Provides information on what changed since the last update to the view.
+        self._deltas = {}
+        self.delta_sequence = 0
+        self._watchers = {}
+
     def _vec2buf(self, v: np.ndarray):
         return v.tobytes()
 
     def _buf2vec(self, buf: bytes):
         return np.frombuffer(buf, dtype=int)
+
+    def _delta_next(self):
+        self.delta_sequence += 1
+        self._deltas[self.delta_sequence] = set()
+
+    def _add_delta(self, delta):
+        if self.delta_sequence not in self._deltas:
+            raise Exception("Delta added improperly (without calling next).")
+
+        self._deltas[self.delta_sequence].add(delta)
+
+    def watch(self, watcher_id):
+        # Add the watcher at the current delta sequence.
+        self._watchers[watcher_id] = self.delta_sequence
+
+    def get_deltas_for(self, watcher_id):
+        if watcher_id not in self._watchers:
+            return None
+
+        # Accumulate all deltas for the view.
+        deltas = set()
+        watcher_delta_sequence = self._watchers[watcher_id]
+        for d in range(watcher_delta_sequence, self.delta_sequence):
+            deltas = deltas.union(self._deltas[d])
+
+        self.watch(watcher_id)
+        return deltas
 
     def populate(self):
         """
@@ -201,17 +233,7 @@ class SubjectiveGridView(GridView):
         for k in locs_to_add:
             ab_p = self._buf2vec(k)
             self._load_loc(ab_p, loc_key=k)
-
-        # loc_copy = {}
-        #
-        # for k in self._source_grid.fov_keys():
-        #     if k in self._subjective_locations:
-        #         loc_copy[k] = self._subjective_locations[k]
-        #     else:
-        #         ab_p = self._buf2vec(k)
-        #         loc_copy[k] = self._get_not_load_loc(ab_p, loc_key=k)
-        #
-        # self._subjective_locations = loc_copy
+            self._deltas[k] = self.delta_sequence
 
     def location_exists(self, absolute_position):
         return self._source_grid.location_exists(absolute_position)
@@ -231,6 +253,10 @@ class SubjectiveGridView(GridView):
         :return:
         """
         loc_key = self._vec2buf(absolute_position)
+        return self._load_loc(absolute_position, loc_key=loc_key)
+
+    def at_key(self, loc_key):
+        absolute_position = self._buf2vec(loc_key)
         return self._load_loc(absolute_position, loc_key=loc_key)
 
     def _get_not_load_loc(self, absolute_position, loc_key=None):
