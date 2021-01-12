@@ -21,7 +21,7 @@ class ModifiedStatSet(StatSet, MutableMapping):
         for k in self.keys():
             self.modifier_set[k] = set()
 
-    def add_modifier(self, modifier: Modifier, stat_type: str):
+    def add_modifier(self, modifier: Modifier, stat_type):
         self.modifiers.add(modifier)
         self.modifier_stat_type[modifier] = stat_type
         self.modifier_set[stat_type].add(modifier)

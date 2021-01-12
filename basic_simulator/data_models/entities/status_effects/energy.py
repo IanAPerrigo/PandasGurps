@@ -1,31 +1,32 @@
-from .status_effect import StatusEffect, MonotonicallyDecreasingStatusEffect
+from .status_effect import StatusEffect, LeveledStatusEffect, TriggeringStatusEffect
 
+from data_models.triggers.status_effects.energy import *
 from data_models.entities.stats.stat_set import StatType
 from data_models.entities.modifiers.modifier import Modifier
 from utility.time import *
 
 
-class Fed(MonotonicallyDecreasingStatusEffect):
+class Fed(LeveledStatusEffect):
     """
     Status representing how many meals have been eaten.
     Each whole meal represents 1 stack of fed.
         Note: until differently valued meals are added, then the meal value will be added to the level (fractional meals).
     """
 
-    def __init__(self, level=0, period_length_seconds=SECONDS_PER_DAY / 3):
-        super(Fed, self).__init__(period_length_seconds=period_length_seconds, level=level)
+    def __init__(self, level=0):
+        super(Fed, self).__init__(level=level)
 
 
-class Hydrated(MonotonicallyDecreasingStatusEffect):
+class Hydrated(LeveledStatusEffect):
     """
     Status representing how much water as been consumed.
     Each drink of water represents 1 stack of hydrated.
     """
-    def __init__(self, level=0, period_length_seconds=SECONDS_PER_DAY / 8):
-        super(Hydrated, self).__init__(period_length_seconds=period_length_seconds, level=level)
+    def __init__(self, level=0):
+        super(Hydrated, self).__init__(level=level)
 
 
-class Starving(StatusEffect):
+class Starving(TriggeringStatusEffect):
     """
     Status representing a lack of food (can co-exist with Fed).
     Starvation means the actor is at a deficit for food energy.
@@ -35,7 +36,7 @@ class Starving(StatusEffect):
         3+ meals, adequate rest, etc
     """
     def __init__(self, level=0, period_length_seconds=SECONDS_PER_DAY):
-        super(Starving, self).__init__()
+        super(Starving, self).__init__(trigger=StarvationTrigger, modifiers=None)
 
         self.period_length_seconds = period_length_seconds
         self.last_level = None
@@ -44,7 +45,7 @@ class Starving(StatusEffect):
         # Static modifiers to be changed based on
         self.max_fp_reduction = Modifier()
         fp_modifiers = {self.max_fp_reduction}
-        self.modifiers[StatType.FP.value] = fp_modifiers
+        self.modifiers[StatType.FP] = fp_modifiers
 
     @property
     def level(self):
@@ -72,11 +73,10 @@ class Starving(StatusEffect):
         :return:
         """
         # Starvation is increased as a trigger condition. Nothing to do except schedule next tick.
-        #ticks_per_period = self.period_length_seconds // time_scale
         self.next_relevant_tick = tick + self.period_length_seconds
 
 
-class Dehydrated(StatusEffect):
+class Dehydrated(TriggeringStatusEffect):
     """
     Status representing lack of water (can co-exist with hydrated).
     Dehydrated means the actor is at a deficit of water.
@@ -88,11 +88,33 @@ class Dehydrated(StatusEffect):
 
     """
     def __init__(self, level=0, period_length_seconds=SECONDS_PER_DAY):
-        super(Dehydrated, self).__init__()
+        super(Dehydrated, self).__init__(DehydrationTrigger, modifiers=None)
 
         self.period_length_seconds = period_length_seconds
-        self.level = level
+        self.last_level = None
+        self._level = level
+
         self.severe = False
+
+        # TODO: implement multiple periodic statuses while exposing the same tick interface.
+
+        # Static modifiers to be changed based on
+        self.max_fp_reduction = Modifier()
+        fp_modifiers = {self.max_fp_reduction}
+        self.modifiers[StatType.FP] = fp_modifiers
+
+        self.max_hp_reduction = Modifier()
+        hp_modifiers = {self.max_hp_reduction}
+        self.modifiers[StatType.HP] = hp_modifiers
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value):
+        self.last_level = self._level
+        self._level = value
 
     def bootstrap(self, tick, time_scale):
         self.added_at_tick = tick
@@ -110,9 +132,7 @@ class Dehydrated(StatusEffect):
         :param time_scale:
         :return:
         """
-        # Starvation increases by one per period.
-        self.level += 1
-        #ticks_per_period = self.period_length_seconds // time_scale
+        # Dehydration increases by one per period.
         self.next_relevant_tick = tick + self.period_length_seconds
 
 
@@ -128,8 +148,29 @@ class Resting(StatusEffect):
     Resting is also lost if any stacks of dehydration / starvation are gained.
 
     """
-    def __init__(self):
+    def __init__(self, level=0, period_length_seconds=SECONDS_PER_DAY):
         super(Resting, self).__init__()
+
+        self.period_length_seconds = period_length_seconds
+
+        # Set tracking the tick that the level was updated at.
+        self.increased_on_tick = set()
+
+        self.last_level = None
+        self._level = level
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value):
+        self.last_level = self._level
+        self._level = value
+
+        # Save the last relevant tick that the level was updated on.
+        if self._level > self.last_level:
+            self.increased_on_tick.add(self.last_relevant_tick)
 
 
 class Sleeping(StatusEffect):

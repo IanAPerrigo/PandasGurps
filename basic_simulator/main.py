@@ -4,7 +4,6 @@ from dependency_injector.wiring import Provide
 
 from direct.showbase.ShowBase import ShowBase
 
-
 from kivy_ui import OverlayApp
 import containers.application.application as app_containers
 from components.camera.camera import Lighting, Camera
@@ -17,6 +16,8 @@ from managers.simulation_manager import SimulationStateManager
 from data_models.actions import *
 from data_models.actions.maneuvers import *
 
+from data_models.entities.status_effects import *
+from data_models.triggers.status_effects.energy import *
 
 def run_app(
         show_base: ShowBase = Provide[app_containers.Application.core.show_base],
@@ -81,10 +82,11 @@ application.config.from_dict({
         },
         'tick_manager': {
             'tick_value': 0,
-            'tick_rate': 1
+            'tick_rate': 100
         },
     },
     "action_resolvers": {},
+    "trigger_resolvers": {},
     "core": {
         "camera": {
             'background_color': (.2, .2, .2, 1),
@@ -111,7 +113,9 @@ application.config.from_dict({
 
 })
 
-resolvers_for_type = {
+
+""" Binding of action resolvers """
+action_resolvers_for_type = {
     MovementAction: application.action_resolvers.movement_resolver,
     MeleeAttack: application.action_resolvers.melee_attack_resolver,
     HarvestAction: application.action_resolvers.harvest_resolver,
@@ -125,13 +129,27 @@ resolvers_for_type = {
 }
 
 
-def get_resolver(action_type: type):
-    return resolvers_for_type[action_type]
+def get_action_resolver(action_type: type):
+    return action_resolvers_for_type[action_type]
 
 
 # Janky, but it works. Relies on the main container context to perform the resolution.
-application.action_resolvers.get_resolver.override(get_resolver)
+application.action_resolvers.get_resolver.override(get_action_resolver)
 
+""" Binding of trigger resolvers """
+trigger_resolvers_for_type = {
+    StarvationTrigger: application.trigger_resolvers.starvation_trigger_resolver,
+    DehydrationTrigger: application.trigger_resolvers.dehydrated_trigger_resolver
+}
+
+
+def get_trigger_resolver(trigger_type: type):
+    return trigger_resolvers_for_type[trigger_type]
+
+
+# Janky, but it works. Relies on the main container context to perform the resolution.
+application.managers.get_trigger_resolver.override(get_trigger_resolver)
+
+# Wire all dependencies and start the app.
 application.wire(modules=[sys.modules[__name__]])
-
 run_app()

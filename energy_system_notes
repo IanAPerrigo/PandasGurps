@@ -92,4 +92,33 @@ Breakdown (large feature):
 
 ### FEATURE ###
 Energy specific tick trigger.
-Manager related to the
+Status effects that have a trigger will trigger after the tick is updated.
+
+Fed and Hydrated updates:
+    - Food and water are assessed every day, since losses across static hourly boundaries are more punishing.
+        - Food / water deficit results in stacks of starvation / dehydration.
+        - Recovery from starvation and dehydration are different:
+            Starvation:
+                3+ meals in a day and enough rest (enough being some arbitrary value / percentage of the day rested or slept)
+                recovers 3 stacks of starvation.
+                3+ meals without enough rest only provides for the current days quota, the rest makes it recover previously lost points.
+
+            Dehydration:
+                Any surplus of water with enough rest will remove all dehydration stacks.
+
+        - Surpluses:
+            Surpluses of food or water are ignored at each period
+                Note: once the idea of reserves (fat) is needed, it will be implemented.
+
+        - Triggers:
+            The status effects for Fed and Hydrated do not trigger, and are simply the level of each status.
+            Dehydration and starvation both trigger daily, to assess the day's intake of food and water.
+            Additionally, dehydration can trigger every 8 hours:
+                Implementation discrepancy:
+                    Should the status Dehydration cover both periods (currently statuses dont support multiple periods of triggering)
+
+                    Create a separate status that updates every 8 hours, and subtracts FP if the actor is at a deficit.
+                        -Pros:
+                            Easy to implement, just another status
+                        -Cons
+                            Could be sloppy? since the dehydration status should cover everything.

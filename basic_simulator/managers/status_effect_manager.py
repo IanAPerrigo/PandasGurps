@@ -1,15 +1,21 @@
-from typing import Dict, Set
+from typing import Dict, List
+
 from managers.simulation_manager import SimulationStateManager
-from data_models.entities.status_effects.status_effect import StatusEffect
+from managers.trigger_resolvers.generic_trigger_manager import TriggerResolver
+
+from data_models.triggers.trigger import EntityTrigger
+from data_models.entities.status_effects.status_effect import StatusEffect, TriggeringStatusEffect
 
 
-class TriggeredStatuses(Dict[object, Set]):
+class TriggeredStatuses(Dict[object, List[TriggeringStatusEffect]]):
     pass
 
 
 class StatusEffectManager:
-    def __init__(self, simulation_manager: SimulationStateManager):
+    def __init__(self, simulation_manager: SimulationStateManager,
+                 trigger_resolver: TriggerResolver):
         self.simulation_manager = simulation_manager
+        self.trigger_resolver = trigger_resolver
 
         # UUID to list mapping of
         self.new_status_effects = {}
@@ -46,25 +52,34 @@ class StatusEffectManager:
         self.new_status_effects.clear()
 
     def _add_triggered_status(self, entity_id, status):
-        status_set = self.triggered_statuses.get(entity_id)
+        statuses = self.triggered_statuses.get(entity_id)
 
-        if status_set is None:
-            status_set = set()
-            # TODO: check if the status effect requires a trigger.
-            self.triggered_statuses[entity_id] = status_set
+        if statuses is None:
+            statuses = list()
+            self.triggered_statuses[entity_id] = statuses
 
-        status_set.add(status)
+        statuses.append(status)
 
     def tick_status_effects(self, tick, time_scale):
         for entity_id, model in self.simulation_manager.entity_model_manager.items():
             # Filter status effects requiring tick, and apply the tick.
-            statuses_requiring_tick = list(filter(lambda se: se.active and se.next_relevant_tick <= tick,
+            statuses_requiring_tick = list(filter(lambda se: se.active and se.next_relevant_tick is not None
+                                                  and se.next_relevant_tick <= tick,
                                                   model.status_effects.items()))
             for se in statuses_requiring_tick:
                 se.update_tick(tick, time_scale)
-                self._add_triggered_status(entity_id, se)
+
+                if isinstance(se, TriggeringStatusEffect):
+                    self._add_triggered_status(entity_id, se)
 
             # Gather and cleanup the deactivated statuses.
             deactivated_statuses = filter(lambda se: not se.active, model.status_effects.items())
             for se in deactivated_statuses:
                 self.remove_status_effect_from_entity(entity_id, se)
+
+            # Gather status effects that need to be triggered, and resolve them.
+            t_statuses = self.triggered_statuses.get(entity_id)
+            if t_statuses is not None:
+                triggers = list(map(lambda se: se.trigger(entity_id), t_statuses))
+                self.trigger_resolver.resolve(triggers)
+                self.triggered_statuses.pop(entity_id)

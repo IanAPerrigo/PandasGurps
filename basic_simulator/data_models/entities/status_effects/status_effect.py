@@ -1,3 +1,5 @@
+from abc import ABCMeta
+
 from data_models.entities.modifiers.modifier_set import ModifierSet
 
 
@@ -42,12 +44,73 @@ class StatusEffect:
         raise NotImplementedError()
 
 
+class TriggeringStatusEffect(StatusEffect):
+    def __init__(self, trigger: type, modifiers):
+        super(TriggeringStatusEffect, self).__init__(modifiers=modifiers)
+        self.trigger = trigger
+
+
+class LeveledStatusEffect(StatusEffect):
+    def __init__(self, level, modifiers: ModifierSet = None):
+        super(LeveledStatusEffect, self).__init__(modifiers)
+
+        self.last_level = None
+        self._level = level
+
+        # Set tracking the tick that the level was updated at.
+        self.increased_on_tick = set()
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value):
+        self.last_level = self._level
+        self._level = value
+
+        # Save the last relevant tick that the level was updated on.
+        if self._level > self.last_level:
+            self.increased_on_tick.add(self.last_relevant_tick)
+
+    def bootstrap(self, tick, time_scale):
+        self.added_at_tick = tick
+        self.active = True
+
+    def update_tick(self, tick, time_scale):
+        """
+        If the update was called, then a threshold of the status has been met.
+        :param tick:
+        :param time_scale:
+        :return:
+        """
+        # Do nothing, no behavior on tick needed.
+        pass
+
+
 class MonotonicallyDecreasingStatusEffect(StatusEffect):
     def __init__(self, period_length_seconds, level, modifiers: ModifierSet = None):
         super(MonotonicallyDecreasingStatusEffect, self).__init__(modifiers)
 
         self.period_length_seconds = period_length_seconds
-        self.level = level
+        self.last_level = None
+        self._level = level
+
+        # Set tracking the tick that the level was updated at.
+        self.increased_on_tick = set()
+
+    @property
+    def level(self):
+        return self._level
+
+    @level.setter
+    def level(self, value):
+        self.last_level = self._level
+        self._level = value
+
+        # Save the last relevant tick that the level was updated on.
+        if self._level > self.last_level:
+            self.increased_on_tick.add(self.last_relevant_tick)
 
     def bootstrap(self, tick, time_scale):
         self.added_at_tick = tick

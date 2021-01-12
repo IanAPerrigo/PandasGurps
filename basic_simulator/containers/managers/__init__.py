@@ -7,6 +7,7 @@ from managers.turn_manager import TurnManager
 from managers.interaction_event_manager import InteractionEventManager
 from managers.tick_manager import TickManager
 from managers.status_effect_manager import StatusEffectManager
+from managers.trigger_resolvers.status_effects.status_effect_trigger_resolver import StatusEffectTriggerResolver
 from managers.observation_manager import ObservationManager
 
 
@@ -49,9 +50,21 @@ class Managers(containers.DeclarativeContainer):
         grid_factory=data_models.grid_model_subjective.provider
     )
 
+    """ Status effect trigger section """
+    def stub_get_resolver():
+        raise Exception("This stub needs to be overwritten.")
+
+    get_trigger_resolver = providers.Callable(stub_get_resolver)
+
+    status_effect_trigger_resolver = providers.Singleton(
+        StatusEffectTriggerResolver,
+        resolvers_for_type=get_trigger_resolver
+    )
+
     status_effect_manager = providers.Singleton(
         StatusEffectManager,
-        simulation_manager=simulation_manager
+        simulation_manager=simulation_manager,
+        trigger_resolver=status_effect_trigger_resolver
     )
 
     tick_manager = providers.Singleton(

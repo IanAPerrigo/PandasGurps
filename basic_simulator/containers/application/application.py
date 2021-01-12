@@ -4,6 +4,7 @@ from direct.directnotify.DirectNotify import DirectNotify
 from containers.data_models import DataModels
 from containers.behaviors import Behaviors
 from containers.utility import Rolls
+from containers.trigger_resolvers import TriggerResolvers
 from containers.components import Components, CoreComponents, DirectObjects, Fsm, Visual
 from containers.managers import Managers
 from containers.repositories import Repositories
@@ -37,6 +38,12 @@ class Application(containers.DeclarativeContainer):
         Managers,
         config=config.managers,
         data_models=data_models
+    )
+
+    trigger_resolvers = providers.Container(
+        TriggerResolvers,
+        config=config.trigger_resolvers,
+        managers=managers
     )
 
     rolls = providers.Container(
