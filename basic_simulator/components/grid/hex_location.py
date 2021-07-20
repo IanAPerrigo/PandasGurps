@@ -44,7 +44,7 @@ class HexLocationComponent(PandaNode):
 
         placeholder = self.hex_model.copy_to(parent_model)
         placeholder.setPos(self.rw_position.getX(),
-                           self.rw_position.getZ() - 1,
+                           self.rw_position.getZ() + 1,
                            self.rw_position.getY())
         placeholder.setHpr(0, 0, 0)
 
@@ -61,4 +61,4 @@ class HexLocationComponent(PandaNode):
         text_node.setText("(%.2f)\n(%s, %s, %s)" % (self.data_model.get_elevation(), self.position[0], self.position[1], self.position[2]))
         text_path = self.path.attachNewNode(text_node)
         text_path.setScale(0.25)
-        text_path.setPos(0, -.1, 0)
+        text_path.setPos(0, .1, 0)

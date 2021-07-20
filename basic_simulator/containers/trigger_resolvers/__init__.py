@@ -1,12 +1,10 @@
 from dependency_injector import containers, providers
 from direct.directnotify.DirectNotify import DirectNotify
 
+from data_models.triggers.status_effects.energy import *
+
 from managers.trigger_resolvers.status_effects.starvation_trigger_resolver import StarvationTriggerResolver
-from managers.trigger_resolvers.status_effects.dehydration_trigger_resolver import DehydrationTriggerResolver
-
-
-def stub_get_resolver():
-    raise Exception("This stub needs to be overwritten.")
+from managers.trigger_resolvers.status_effects.dehydration import *
 
 
 class TriggerResolvers(containers.DeclarativeContainer):
@@ -23,8 +21,14 @@ class TriggerResolvers(containers.DeclarativeContainer):
         logger=logger
     )
 
-    dehydrated_trigger_resolver = providers.Singleton(
-        DehydrationTriggerResolver,
+    daily_dehydrated_trigger_resolver = providers.Singleton(
+        DailyDehydrationTriggerResolver,
+        simulation_manager=managers.simulation_manager,
+        logger=logger
+    )
+
+    eight_hour_dehydrated_trigger_resolver = providers.Singleton(
+        EightHourDehydrationTriggerResolver,
         simulation_manager=managers.simulation_manager,
         logger=logger
     )

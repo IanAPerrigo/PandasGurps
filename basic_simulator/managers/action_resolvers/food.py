@@ -1,16 +1,18 @@
 import numpy as np
+from typing import cast
 
 from .generic import ActionResolver
-from .decorators import require_proximity, require_target_type, require_consciousness, required_target
+from .decorators import require_proximity, require_target_type, require_consciousness, required_target, required_terrain
 
 from managers.simulation_manager import SimulationStateManager
 
 from data_models.actions.action import ActionStatus
-from data_models.actions.food import HarvestAction, EatAction
+from data_models.actions.food import HarvestAction, EatAction, DrinkAction
 from data_models.entities.being import Being
 from data_models.entities.status_effects.energy import *
 from data_models.entities.status_effects.consciousness import *
-from data_models.entities.food.food import Food
+from data_models.entities.energy.food import Food
+from data_models.terrain.basic_terrain import WaterTerrain
 
 from utility.rolling import *
 from events import Event
@@ -38,12 +40,35 @@ class EatResolver(ActionResolver):
         self.simulation_manager.entity_component_manager.pop(action.target_id)
 
         # Add or update the status effect for 'Fed'.
-        fed_statuses = actor_model.status_effects.get(Fed)
-        if len(fed_statuses) != 1:
-            raise Exception("Every being should have exactly one fed status.")
+        fed_status = cast(Fed, actor_model.status_effects.get_single(Fed))
 
         # Add the sustenance value to the level of fed (amount of energy in the meal)
-        fed_statuses[0].level += sustenance_value
+        fed_status.level += sustenance_value
+        action.status = ActionStatus.RESOLVED
+
+
+class DrinkResolver(ActionResolver):
+    def __init__(self, simulation_manager: SimulationStateManager, logger):
+        super(DrinkResolver, self).__init__(simulation_manager)
+
+        self.logger = logger
+
+    @require_consciousness
+    @required_terrain(selection_type=WaterTerrain)
+    # TODO: require target status (drinkable) instead of hard typing to Water
+    # TODO: proximity only works on entities, terrain isn't an entity in the same way.
+    #  (another reason to make it an entity)
+    #@require_proximity(exact=0)
+    def resolve(self, action: DrinkAction):
+        actor = action.actor
+        actor_model = self.simulation_manager.being_model_manager.get(actor)
+
+        # Add or update the status effect for 'Hydrated'.
+        hydrated_status = cast(Hydrated, actor_model.status_effects.get_single(Hydrated))
+
+        # Add the sustenance value to the level of fed (amount of energy in the meal)
+        # fixed sustenance value. May change, but doesnt really matter now.
+        hydrated_status.level += 1
         action.status = ActionStatus.RESOLVED
 
 
@@ -62,7 +87,7 @@ class HarvestResolver(ActionResolver):
         actor_model = self.simulation_manager.being_model_manager.get(actor)
 
         # Require entities to be in close quarters.
-        sub_loc = self.simulation_manager.grid_model.get_loc_of_obj(actor)
+        sub_loc = self.simulation_manager.grid_model.get_location(actor)
 
         # Check if there are any status effects that allow harvesting
         #   auto-allowed: unconscious, dead, inanimate

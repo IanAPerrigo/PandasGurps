@@ -1,4 +1,5 @@
 from abc import ABCMeta
+from typing import Callable, Any, List
 
 from data_models.entities.modifiers.modifier_set import ModifierSet
 
@@ -44,10 +45,47 @@ class StatusEffect:
         raise NotImplementedError()
 
 
+class TrackedTrigger:
+    def __init__(self, trigger_type, period_length):
+        self.trigger_type = trigger_type
+        self.period_length = period_length
+        self.tick_count = 0
+
+
 class TriggeringStatusEffect(StatusEffect):
-    def __init__(self, trigger: type, modifiers):
+    def __init__(self, modifiers):
         super(TriggeringStatusEffect, self).__init__(modifiers=modifiers)
-        self.trigger = trigger
+        self._trigger_map = {}
+        self._active_triggers = []
+
+    def triggers(self, entity_id):
+        trigger_list = list(map(lambda t: t(entity_id), self._active_triggers))
+        return trigger_list
+
+    def update_tick(self, tick, time_scale):
+        self._active_triggers.clear()
+
+        # Collect all triggers up until the current tick.
+        triggered_events = sorted(filter(lambda t: t <= tick, self._trigger_map.keys()))
+        for tick in triggered_events:
+            triggers_on_tick = self._trigger_map[tick]
+            for t in triggers_on_tick:
+                # Add the trigger to list of triggered events.
+                self._active_triggers.append(t)
+                t.tick_count += 1
+
+                # Advance the next tick for the trigger.
+                next_tick = tick + t.period_length
+                t_l = self._trigger_map.get(next_tick)
+                if t_l is None:
+                    t_l = list()
+                    self._trigger_map[next_tick] = t_l
+
+                t_l.append(t)
+
+            del (self._trigger_map[tick])
+
+        self.next_relevant_tick = min(self._trigger_map.keys())
 
 
 class LeveledStatusEffect(StatusEffect):

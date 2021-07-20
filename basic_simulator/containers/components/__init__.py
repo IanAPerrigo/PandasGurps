@@ -93,7 +93,8 @@ class Visual(containers.DeclarativeContainer):
         GridComponent,
         parent=core.render,
         data_model=data_models.grid_model_objective,
-        entity_component_manager=managers.entity_component_manager
+        entity_component_manager=managers.entity_component_manager,
+        terrain_factory=data_models.terrain_factory
     )
 
 

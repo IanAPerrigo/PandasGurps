@@ -24,14 +24,14 @@ def require_consciousness(fn=WRAPPED, f_args=F_ARGS, f_kwargs=F_KWARGS):
 @function_decorator
 def require_proximity(exact=None, at_least=None, at_most=None, fn=WRAPPED, f_args=F_ARGS, f_kwargs=F_KWARGS):
     self, action = f_kwargs['self'], f_kwargs['action']
-    sub_loc = self.simulation_manager.grid_model.get_loc_of_obj(action.actor)
+    sub_loc = self.simulation_manager.grid_model.get_location(action.actor)
 
     if action.target_id is None:
         action.status = ActionStatus.FAILED
         action.reason = "No entity is targeted for proximity"
         return
     else:
-        tar_loc = self.simulation_manager.grid_model.get_loc_of_obj(action.target_id)
+        tar_loc = self.simulation_manager.grid_model.get_location(action.target_id)
         dist = cubic_manhattan(sub_loc, tar_loc)
 
         if exact is not None and dist != exact:
@@ -91,14 +91,14 @@ def required_target(ignore_self=True, explicit=True, selection_type: type = None
         return
 
     # Otherwise, select from the different types of targeting, resolving ambiguity by random selection.
-    actor_loc = self.simulation_manager.grid_model.get_loc_of_obj(action.actor)
+    actor_loc = self.simulation_manager.grid_model.get_location(action.actor)
     if hasattr(action, 'direction') and action.direction is not None:
         dst_loc = np.add(action.direction.value, actor_loc)
-        dst_entities_by_id = self.simulation_manager.grid_model.get_at_loc(dst_loc)
+        dst_entities_by_id = self.simulation_manager.grid_model.at(dst_loc).entities
     elif hasattr(action, 'location') and action.location is not None:
-        dst_entities_by_id = self.simulation_manager.grid_model.get_at_loc(action.location)
+        dst_entities_by_id = self.simulation_manager.grid_model.at(action.location).entities
     else:
-        dst_entities_by_id = self.simulation_manager.grid_model.get_at_loc(actor_loc)
+        dst_entities_by_id = self.simulation_manager.grid_model.at(actor_loc).entities
 
     # Remove the actor from the possible selections.
     if ignore_self and action.actor in dst_entities_by_id:
@@ -120,5 +120,40 @@ def required_target(ignore_self=True, explicit=True, selection_type: type = None
                     )
             )
         action.target_id = random.choice(dst_entities_by_id)
+
+    return fn(*f_args, **f_kwargs)
+
+
+@function_decorator
+def required_terrain(ignore_self=True, selection_type: type = None, fn=WRAPPED, f_args=F_ARGS, f_kwargs=F_KWARGS):
+    self, action = f_kwargs['self'], f_kwargs['action']
+
+    # Select from the different types of targeting, resolving ambiguity by random selection.
+    actor_loc = self.simulation_manager.grid_model.get_location(action.actor)
+    if hasattr(action, 'direction') and action.direction is not None:
+        dst_loc = np.add(action.direction.value, actor_loc)
+        dst_terrain = self.simulation_manager.grid_model.at(dst_loc).terrain
+    elif hasattr(action, 'location') and action.location is not None:
+        dst_terrain = self.simulation_manager.grid_model.at(action.location).terrain
+    else:
+        dst_terrain = self.simulation_manager.grid_model.at(actor_loc).terrain
+
+    # If no choices left, the action cant be resolved.
+    if len(dst_terrain) == 0:
+        action.status = ActionStatus.FAILED
+        action.reason = "No terrain left to randomly select from"
+        return
+    else:
+        # If there is a stipulation of selection type, pull down the data data_models to verify their type.
+        if selection_type is not None:
+            # Filter only data_models with the selection type.
+            dst_terrain = list(filter(lambda e: isinstance(e, selection_type), dst_terrain))
+
+        if len(dst_terrain) == 0:
+            action.status = ActionStatus.FAILED
+            action.reason = "No terrain left to randomly select from"
+            return
+
+        action.target = random.choice(dst_terrain)
 
     return fn(*f_args, **f_kwargs)

@@ -269,3 +269,11 @@ Providing state deltas:
             required at any step.
             - DeltaObject will be inherited from to provide the tracking functionality of tracking changes in the state.
                 - Writes that add changes to the object will be intercepted by the delta class and track accordingly.
+
+
+### IMPROVEMENT ###
+Formalize the entity manager object to efficiently manage different types of entities (and allowing transparent access to
+objects based on type / id)
+
+Translation of existing code:
+    - Anything using the old interface will be changed to adapters to the singleton implementation of the new manager.

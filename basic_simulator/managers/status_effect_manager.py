@@ -80,6 +80,11 @@ class StatusEffectManager:
             # Gather status effects that need to be triggered, and resolve them.
             t_statuses = self.triggered_statuses.get(entity_id)
             if t_statuses is not None:
-                triggers = list(map(lambda se: se.trigger(entity_id), t_statuses))
+                triggers = []
+                for se in t_statuses:
+                    triggers.extend(se.triggers(entity_id))
+
+                # TODO: calls to 'se.trigger()' can return different types of triggers, depending on internal se
+                #  representations. An example is a different trigger based on period (one every 8 hours and one daily)
                 self.trigger_resolver.resolve(triggers)
                 self.triggered_statuses.pop(entity_id)

@@ -4,7 +4,7 @@ from direct.directnotify.DirectNotify import DirectNotify
 from managers.action_resolvers.generic import GenericActionResolver
 from managers.action_resolvers.movement import MovementResolver
 from managers.action_resolvers.combat import MeleeAttackResolver
-from managers.action_resolvers.food import HarvestResolver, EatResolver
+from managers.action_resolvers.food import HarvestResolver, EatResolver, DrinkResolver
 from managers.action_resolvers.maneuvers.move import MoveManeuverResolver
 from managers.action_resolvers.maneuvers.passive_observation import PassiveObservationManeuverResolver
 from managers.action_resolvers.maneuvers.move_attack import MoveAttackManeuverResolver
@@ -50,6 +50,12 @@ class ActionResolvers(containers.DeclarativeContainer):
 
     harvest_resolver = providers.Singleton(
         HarvestResolver,
+        simulation_manager=managers.simulation_manager,
+        logger=logger
+    )
+
+    drink_resolver = providers.Singleton(
+        DrinkResolver,
         simulation_manager=managers.simulation_manager,
         logger=logger
     )

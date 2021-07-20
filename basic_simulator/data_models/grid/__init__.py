@@ -2,16 +2,40 @@ import numpy as np
 from typing import Dict
 
 from utility.coordinates import *
+from data_models.terrain.terrain import Terrain, MajorTerrain
 
 
 class Location:
     def __init__(self):
         self.entities = set()
 
-        self.major_terrain = None
+        self._major_terrain = None
+        self._terrain = set()
 
-        # TODO: might change form when terrains are implemented
-        self.terrain = set()
+    @property
+    def major_terrain(self):
+        return self._major_terrain
+
+    @major_terrain.setter
+    def major_terrain(self, val):
+        if self._major_terrain in self._terrain:
+            self.entities.remove(self._major_terrain)
+            self._terrain.remove(self._major_terrain)
+
+        self._major_terrain = val
+        self.entities.add(val)
+        self._terrain.add(val)
+
+    @property
+    def terrain(self):
+        return tuple(self._terrain)
+
+    def add_terrain(self, t: Terrain):
+        if isinstance(t, MajorTerrain):
+            self.major_terrain = t
+        else:
+            self.entities.add(t)
+            self._terrain.add(t)
 
     def get_elevation(self):
         return self.major_terrain.elevation if self.major_terrain is not None else -1

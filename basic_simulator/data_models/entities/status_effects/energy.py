@@ -1,4 +1,4 @@
-from .status_effect import StatusEffect, LeveledStatusEffect, TriggeringStatusEffect
+from .status_effect import StatusEffect, LeveledStatusEffect, TriggeringStatusEffect, TrackedTrigger
 
 from data_models.triggers.status_effects.energy import *
 from data_models.entities.stats.stat_set import StatType
@@ -36,7 +36,7 @@ class Starving(TriggeringStatusEffect):
         3+ meals, adequate rest, etc
     """
     def __init__(self, level=0, period_length_seconds=SECONDS_PER_DAY):
-        super(Starving, self).__init__(trigger=StarvationTrigger, modifiers=None)
+        super(Starving, self).__init__(modifiers=None)
 
         self.period_length_seconds = period_length_seconds
         self.last_level = None
@@ -88,15 +88,13 @@ class Dehydrated(TriggeringStatusEffect):
 
     """
     def __init__(self, level=0, period_length_seconds=SECONDS_PER_DAY):
-        super(Dehydrated, self).__init__(DehydrationTrigger, modifiers=None)
+        super(Dehydrated, self).__init__(modifiers=None)
 
         self.period_length_seconds = period_length_seconds
         self.last_level = None
         self._level = level
 
         self.severe = False
-
-        # TODO: implement multiple periodic statuses while exposing the same tick interface.
 
         # Static modifiers to be changed based on
         self.max_fp_reduction = Modifier()
@@ -116,13 +114,26 @@ class Dehydrated(TriggeringStatusEffect):
         self.last_level = self._level
         self._level = value
 
+    def triggers(self, entity_id):
+        trigger_list = []
+        for a_t in self._active_triggers:
+            trigger_list.append(a_t.trigger_type(entity_id=entity_id, tick_count=a_t.tick_count))
+        return trigger_list
+
     def bootstrap(self, tick, time_scale):
         self.added_at_tick = tick
-        #ticks_per_period = self.period_length_seconds // time_scale
-        self.next_relevant_tick = self.added_at_tick + self.period_length_seconds
 
-        # In this case, active will be set to false externally when the conditions for hunger and
-        # rest have been satisfied.
+        daily_trigger = self.added_at_tick + self.period_length_seconds
+        eight_hour_trigger = self.added_at_tick + (self.period_length_seconds // 3)
+        # TODO: note, integer division could accumulate errors. Better to allow fractional ticks, and allow them to
+        #  align when they do so no time is lost (periodic divergence)
+
+        # Queue all relevant triggers.
+        # TODO: make a trigger object, add fields like periodicity, period length, etc.
+        self._trigger_map[eight_hour_trigger] = [TrackedTrigger(EightHourDehydrationTrigger, self.period_length_seconds // 3)]
+        self._trigger_map[daily_trigger] = [TrackedTrigger(DailyDehydrationTrigger, self.period_length_seconds)]
+
+        self.next_relevant_tick = min(self._trigger_map.keys())
         self.active = True
 
     def update_tick(self, tick, time_scale):
@@ -132,8 +143,7 @@ class Dehydrated(TriggeringStatusEffect):
         :param time_scale:
         :return:
         """
-        # Dehydration increases by one per period.
-        self.next_relevant_tick = tick + self.period_length_seconds
+        super(Dehydrated, self).update_tick(tick, time_scale)
 
 
 class Resting(StatusEffect):

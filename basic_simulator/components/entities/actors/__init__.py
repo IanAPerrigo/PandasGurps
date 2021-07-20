@@ -129,11 +129,13 @@ class ActorComponent(EntityComponent):
                  parent,
                  data_model: Being,
                  fsm: ActorFSM,
-                 model_file: str):
+                 model_file: str,
+                 color: tuple = (.5, .5, .5, 0.5)):
         super(ActorComponent, self).__init__(parent, data_model, fsm, model_file)
 
         # Components children to be instantiated on load.
         self.health_bar = None
+        self.color = color
 
     def refresh_stats(self):
         stats = self.data_model.stats
@@ -148,7 +150,7 @@ class ActorComponent(EntityComponent):
         actor.setPos(0, 0, 0)
         actor.setScale(1)
         actor.setHpr(0, 0, 0)
-        actor.setColor(.5, .5, .5, 0.5)
+        actor.setColor(*self.color)
         actor.setDepthOffset(1)
 
         # Setup the model's children.

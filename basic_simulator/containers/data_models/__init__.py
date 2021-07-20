@@ -5,6 +5,8 @@ from data_models.grid.persistent_grid import DatabaseBackedGridModel
 from data_models.grid.ephemeral_grid import SubjectiveGridModel
 from data_models.entities.being import Being
 
+from .terrain import TerrainFactory
+
 id_num = 0
 
 
@@ -20,6 +22,7 @@ def get_id():
 class DataModels(containers.DeclarativeContainer):
     config = providers.Configuration()
     repositories = providers.DependenciesContainer()
+    terrain = providers.DependenciesContainer()
 
     #uuid = providers.Factory(uuid1)
     uuid = providers.Callable(get_id)
@@ -38,4 +41,12 @@ class DataModels(containers.DeclarativeContainer):
     being_model = providers.Factory(
         Being,
         entity_id=uuid
+    )
+
+    # Override this as a function that returns
+    get_terrain_types = providers.Dict({})
+
+    terrain_factory = providers.Singleton(
+        TerrainFactory,
+        types=get_terrain_types
     )

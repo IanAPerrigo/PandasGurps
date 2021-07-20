@@ -10,8 +10,7 @@ class SubjectiveLocation(Location):
         self._source_location = source_location
 
         # Fields are objective, and are inherited from the source location.
-        self.terrain = source_location.terrain
-        self.major_terrain = source_location.major_terrain
+        self.add_terrain(source_location.terrain)
 
 
 class SubjectiveGridModel(GridModel):

@@ -15,7 +15,8 @@ from utility.coordinates import *
 
 
 class GridComponent(DirectObject, PandaNode):
-    def __init__(self, parent, data_model: DatabaseBackedGridModel, entity_component_manager):
+    def __init__(self, parent, data_model: DatabaseBackedGridModel, entity_component_manager,
+                 terrain_factory):
 
         PandaNode.__init__(self, "grid_%s" % id(self))
         DirectObject.__init__(self)
@@ -24,6 +25,7 @@ class GridComponent(DirectObject, PandaNode):
         self.path = parent.attachNewNode(self)
         self.data_model = data_model
         self.entity_component_manager = entity_component_manager
+        self.terrain_factory = terrain_factory
 
         self._hex_model = None
         self.cubic_spiral = cubic_spiral(np.array([0, 0, 0]), radius=data_model.chunk_radius + 1)
@@ -85,20 +87,23 @@ class GridComponent(DirectObject, PandaNode):
 
             center = (256, 256)
             o_x, o_y = cube_to_offset(c_sp)
+            # TODO: uncomment, testing water drinking.
             current_noise = self.terrain_noise[center[0] + o_x][center[1] + o_y]
+            #current_noise = -1.0
             # TODO: noise times maximum height. work this out with the noise generation to make the jumps not drastic
             elevation = current_noise * 20
             terrain = None
+
             if -1.0 <= current_noise <= -0.5:
-                terrain = WaterTerrain(elevation=elevation)
+                terrain = self.terrain_factory(WaterTerrain, elevation=elevation)
             elif -0.9 <= current_noise <= 0.6:
                 percent = (current_noise + 0.9) / 1.5
                 modulated_color = 0, 1 * percent, 0
-                terrain = GrassTerrain(elevation=elevation, color=modulated_color)
+                terrain = self.terrain_factory(GrassTerrain, elevation=elevation, color=modulated_color)
             else:
                 # Cliff are steeper than most terrain.
                 elevation = elevation * 1.5
-                terrain = CliffTerrain(elevation=elevation)
+                terrain = self.terrain_factory(CliffTerrain, elevation=elevation)
 
             c_rsp = relative_spiral_matrix[ii]
             loc = self.data_model.at_chunked(chunk.chunk_id, c_rsp)

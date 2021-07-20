@@ -2,7 +2,7 @@ from panda3d.core import PandaNode, TextNode
 from direct.showbase.DirectObject import DirectObject
 
 from components.entities.generic import EntityComponent
-from data_models.entities.food import Food
+from data_models.entities.energy import Food
 
 
 class BasicMealComponent(EntityComponent):

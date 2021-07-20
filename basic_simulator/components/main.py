@@ -65,7 +65,9 @@ class GurpsMain(FSM.FSM):
         #     loc = (random.randint(0,9), random.randint(0,9))
         #     self.grid_model.insert(loc, actor.id)
 
-        for _ in range(3):
+        Event.signal("generate_random_character", HumanPlayerBehavior)
+
+        for _ in range(2):
             Event.signal("generate_random_character", AiBehavior)
 
         Event.signal("notify_grid_update")

@@ -11,10 +11,6 @@ from managers.simulation_manager import SimulationStateManager
 
 
 class StarvationTriggerResolver(TriggerResolver):
-    """
-    When a starvation trigger elapses, subtract the amount of meals per period required for the entity from
-    the fed status.
-    """
     def __init__(self, simulation_manager: SimulationStateManager,
                  logger):
         self.simulation_manager = simulation_manager
@@ -61,11 +57,13 @@ class StarvationTriggerResolver(TriggerResolver):
             modified_required_rest = self.REQUIRED_REST_PERCENTAGE
 
             # Determine if any rest with food occurred.
+            # TODO: maybe separate these, ample rest + the right amount of food, not at the same time.
             num_restful_meals_required = len(rest_status.increased_on_tick.intersection(fed_status.increased_on_tick))
 
-            if num_restful_meals_required >= 3:
+            if num_restful_meals_required >= required_meals_per_day:
                 starvation_stacks_removed = int(num_restful_meals_required)
                 starving_status.level -= starvation_stacks_removed
+                starving_status.max_fp_reduction.modify = self._flat_reduction(starving_status.level)
 
         # New period, remove existing levels.
         fed_status.level = 0

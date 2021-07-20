@@ -62,11 +62,13 @@ class CharacterCreator(DirectObject):
 
         if behavior_type == HumanPlayerBehavior:
             behavior = self.human_behavior_factory(actor_model.entity_id)
+            color = (.5, .25, .25, .5)
         else:
             behavior = self.ai_behavior_factory(actor_model.entity_id)
+            color = (.5, .5, .5, .5)
 
         fsm = self.being_fsm_factory(data_model=actor_model, behavior=behavior)
-        actor = self.being_component_factory(data_model=actor_model, fsm=fsm)
+        actor = self.being_component_factory(data_model=actor_model, fsm=fsm, color=color)
 
         self.entity_component_manager[actor.id] = actor
 
