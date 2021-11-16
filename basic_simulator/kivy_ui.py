@@ -9,7 +9,6 @@ from kivy.modules import inspector
 from components.gui.contextual import *
 
 kivy.require('2.0.0')
-=
 
 class SidebarContainerLayout(StackLayout):
     direction_pressed_callback = Property(None)
