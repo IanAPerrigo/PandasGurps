@@ -17,6 +17,3 @@ class MovementTool(Widget):
     def direction_pressed_callback(self, instance, direction):
         event_name = "VECTOR_%s" % direction
         Event.signal(event_name)
-
-
-

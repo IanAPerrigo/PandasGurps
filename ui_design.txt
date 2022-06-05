@@ -1,0 +1,13 @@
+Simulation View:
+    2 partition:
+        - Panda3d render box (takes up 100% of the screen)
+        - Overlay sidebar
+            - Provides visualizations and button interactions for the application in the form of:
+                - Actions
+                - Actor descriptions
+                - Simulation Parameters
+
+
+Overlay Sidebar:
+    - Action drawer
+        - List of available actions

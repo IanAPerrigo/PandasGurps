@@ -4,9 +4,11 @@ from direct.showbase.DirectObject import DirectObject
 
 
 class Event:
+    messenger = None
+
     @staticmethod
     def signal(event_name, *args):
-        messenger.send("%s" % event_name, sentArgs=list(args))
+        Event.messenger.send("%s" % event_name, sentArgs=list(args))
 
     @staticmethod
     def register(event_name, source: DirectObject, callback):

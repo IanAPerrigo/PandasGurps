@@ -1,4 +1,4 @@
-#:kivy 1.11.1
+#:kivy 2.0.0
 #:import polygon utility.math.polygon
 
 <Arrow@Image>:
@@ -133,20 +133,3 @@
                     angle: 0
 
                 Hexagon:
-
-<SidebarContainerLayout>
-    orientation: 'lr-tb'
-    pos_hint: {'right': 1}
-    size_hint: (0.3, 1)
-
-
-    # Backdrop
-    canvas:
-        Color:
-            rgba: .2, .2, .2, 1
-        Rectangle:
-            pos: self.pos
-            size: self.size
-
-    MovementTool:
-        direction_pressed_callback: root.direction_pressed_callback

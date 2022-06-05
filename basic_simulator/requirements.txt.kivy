@@ -1,5 +1,6 @@
 panda3d==1.10.10
-wxPython==4.1.1
+panda3d_kivy==0.3.0
+kivy[base]
 
 numpy==1.20.3
 numba==0.54.1
