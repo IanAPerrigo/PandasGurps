@@ -3,7 +3,7 @@ from direct.directnotify.DirectNotify import DirectNotify
 from direct.showbase.ShowBase import ShowBase
 
 from components.camera.camera import Camera, Lighting
-from components.main import GurpsMain
+from components.main import GurpsMainFSM
 from components.simulation.turn_management import TurnManagementFSM
 from components.event_handlers.consciousness import ConsciousnessHandler
 from components.event_handlers.character_creation import CharacterCreator
@@ -190,7 +190,7 @@ class Components(containers.DeclarativeContainer):
       )
 
     main_fsm = providers.Singleton(
-        GurpsMain,
+        GurpsMainFSM,
         turn_management_fsm=fsms.turn_management_fsm,
         character_creator=character_creator,
         logger=logger

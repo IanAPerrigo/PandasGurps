@@ -11,15 +11,14 @@ class GenericActionResolver:
     Locates and dispatches the correct resolver for an action type.
     Fills the dependencies required for each resolver.
     """
-    def __init__(self, resolvers_for_type, simulation_manager: SimulationStateManager):
-        self.__resolvers = resolvers_for_type
-        self.simulation_manager = simulation_manager
+    def __init__(self, resolvers_for_type):
+        self.resolvers_for_type = resolvers_for_type
 
     def resolve(self, action: Action):
-        # Obtain the provider, construct it, and resolve the action.
-        resolver_provider = self.__resolvers(type(action))
-        action_resolver = resolver_provider()
-        action_resolver.resolve(action)
+        # Obtain the factory, construct the resolver, and resolve the action.
+        resolver_factory = self.resolvers_for_type.get(type(action))
+        resolver = resolver_factory.build()
+        resolver.resolve(action)
 
 
 class ActionResolver:

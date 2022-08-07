@@ -9,10 +9,7 @@ from data_models.triggers.status_effects.energy import *
 from data_models.terrain.basic_terrain import *
 
 
-# Config file for the dependency injector
-def apply(root: containers.Container):
-    # Main config passed to containers.
-    root.config.from_dict({
+config_dict = {
         "repositories": {
             'connection_string': 'sqlite:///:memory:',
             'echo': True
@@ -55,6 +52,10 @@ def apply(root: containers.Container):
         "action_resolvers": {},
         "trigger_resolvers": {},
         "core": {
+            'app': {
+                'width': 1000,
+                'height': 1000
+            },
             "camera": {
                 'background_color': (.2, .2, .2, 1),
                 'fov': 75,
@@ -78,7 +79,12 @@ def apply(root: containers.Container):
         },
         "gui": {},
 
-    })
+    }
+
+# Config file for the dependency injector
+def apply(root: containers.Container):
+    # Main config passed to containers.
+    root.config.from_dict()
 
     """ Binding of action resolvers """
     action_resolvers_for_type = {

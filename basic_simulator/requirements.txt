@@ -3,11 +3,11 @@ wxPython==4.1.1
 
 numpy==1.20.3
 numba==0.54.1
-dependency-injector==4.37.0
+argh
 
 sqlalchemy==1.4.27
 scipy==1.7.2
--e git+git://github.com/pvigier/perlin-numpy#egg=perlin-numpy
+-e git+https://github.com/pvigier/perlin-numpy#egg=perlin-numpy
 
-decopatch=1.4.8
-makefun=1.12.1
+decopatch==1.4.8
+makefun==1.12.1

@@ -10,7 +10,6 @@ from containers.components import Components, CoreComponents, DirectObjects, Fsm
 from containers.managers import Managers
 from containers.repositories import Repositories
 from containers.action_resolvers import ActionResolvers, ManeuverResolvers
-from containers.gui import GUI
 
 
 class Application(containers.DeclarativeContainer):
@@ -109,10 +108,4 @@ class Application(containers.DeclarativeContainer):
         behaviors=behaviors,
         fsms=fsms,
         visual=visual
-    )
-
-    gui = providers.Container(
-        GUI,
-        config=config.gui,
-        core=core
     )

@@ -7,7 +7,7 @@ from behaviors.actors.ai import AiBehavior
 from behaviors.actors import HumanPlayerBehavior
 
 
-class GurpsMain(FSM.FSM):
+class GurpsMainFSM(FSM.FSM):
     def __init__(self, turn_management_fsm: TurnManagementFSM, character_creator: CharacterCreator, logger):
         FSM.FSM.__init__(self, 'fsm_%r' % id(self))
 

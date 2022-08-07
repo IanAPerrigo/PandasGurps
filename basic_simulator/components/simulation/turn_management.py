@@ -6,6 +6,7 @@ from managers.simulation_manager import SimulationStateManager
 from managers.entity_manager import EntityFsmManager
 from managers.interaction_event_manager import InteractionEventManager
 from managers.tick_manager import TickManager
+from managers.entity_manager import EntityModelManager
 
 from data_models.actions import ActionStatus
 from data_models.actions.maneuvers import YieldTurnManeuver, PassiveObservationManeuver
@@ -19,6 +20,7 @@ class TurnManagementFSM(FSM):
                  action_resolver: GenericActionResolver,
                  simulation_manager: SimulationStateManager,
                  entity_fsm_manager: EntityFsmManager,
+                 entity_model_manager: EntityModelManager,
                  interaction_event_manager: InteractionEventManager,
                  tick_manager: TickManager,
                  logger):
@@ -28,17 +30,20 @@ class TurnManagementFSM(FSM):
         self.action_resolver = action_resolver
         self.simulation_manager = simulation_manager
         self.entity_fsm_manager = entity_fsm_manager
+        self.entity_model_manager = entity_model_manager
         self.interaction_event_manager = interaction_event_manager
         self.tick_manager = tick_manager
         self.logger = logger.newCategory(__name__)
 
+        self.turn_order = ()
+
     def enterManagerSetup(self):
-        self.turn_manager.generate_turn_order()
+        self.turn_order = self.turn_manager.generate_turn_order(self.entity_model_manager)
         self.tick_manager.tick()
         self.demand("NextTurn")
 
     def enterNextTurn(self):
-        curr_actor = self.turn_manager.get_current_actor()
+        curr_actor = self.turn_order[0] if self.turn_order else None
 
         if curr_actor is not None:
             # TODO: archive the actions taken by the current actor.
@@ -51,20 +56,20 @@ class TurnManagementFSM(FSM):
             fsm.request("Complete")
 
         # Advance the turn.
-        self.turn_manager.advance_turn()
-        curr_actor = self.turn_manager.get_current_actor()
+        self.turn_order = self.turn_manager.advance_turn(self.turn_order)
 
         # If the top of the round was reached, regenerate the turn order and tick 1 period of time.
-        if curr_actor is None:
-            self.turn_manager.generate_turn_order()
-            self.turn_manager.advance_turn()
+        if len(self.turn_order) == 0:
+            self.turn_order = self.turn_manager.generate_turn_order(self.entity_model_manager)
             self.tick_manager.tick()
+
+        curr_actor = self.turn_order[0] if self.turn_order else None
 
         # Begin the actors turn.
         self.demand("TurnBegin")
 
     def enterTurnBegin(self):
-        curr_actor = self.turn_manager.get_current_actor()
+        curr_actor = self.turn_order[0] if self.turn_order else None
 
         # If there are no actors, wait for a transition from the turn_begin state.
         # TODO: listen to an event for when a character is added.
@@ -142,7 +147,7 @@ class TurnManagementFSM(FSM):
 
     def _step_complete(self):
         first_failed, first_unready, processed_any_action = None, None, False
-        curr_actor = self.turn_manager.get_current_actor()
+        curr_actor = self.turn_order[0] if self.turn_order else None
 
         targets = self.simulation_manager.action_manager.get_submitted_actions(curr_actor)
         unresolved_actions = filter(lambda maneuver: maneuver.status != ActionStatus.RESOLVED, targets)

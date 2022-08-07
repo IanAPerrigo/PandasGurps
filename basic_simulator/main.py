@@ -1,14 +1,9 @@
 import argh
+import panda_main
 
 
 def main(no_ui: bool = None):
-    print(no_ui)
-    if no_ui:
-        import kivy_main
-        pass
-    elif not no_ui:
-        import panda_main
-        pass
+    panda_main.run_app()
 
 
 if __name__ == '__main__':
